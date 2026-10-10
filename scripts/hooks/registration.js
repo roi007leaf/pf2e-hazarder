@@ -13,6 +13,7 @@ import { rollDisable } from '../ui/TrackerCard.js';
 import { findStrike, postSaveRequest, postTurnCard, spendFromMessage } from '../ui/TurnCard.js';
 import { decorateTurnCard, nextSpent } from '../ui/turnCardDom.js';
 import { extractSaves } from '../ui/routineParts.js';
+import { buildCheckRequest } from '../ui/checkRequest.js';
 import {
   isHazardTurn,
   shouldPromptForPlan,
@@ -142,6 +143,17 @@ async function onCardClick(runner, event) {
   }
   if (!game.user.isGM) return;
   if (action === 'hazard-sheet') return tokenDoc.actor?.sheet.render(true);
+  if (action === 'post-check') {
+    const [componentId] = String(el.dataset.instanceKey).split(':');
+    const disable = getOrDraftPlan(tokenDoc.actor)
+      .plan.components.find((c) => c.id === componentId)
+      ?.disables.find((d) => d.id === el.dataset.disableId);
+    if (!disable) return;
+    return ChatMessage.create({
+      content: buildCheckRequest(disable),
+      speaker: ChatMessage.getSpeaker({ token: tokenDoc }),
+    });
+  }
   if (!runner.isWriter()) {
     ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Errors.NotActiveGM'));
     return;

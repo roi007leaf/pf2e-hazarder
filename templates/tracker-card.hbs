@@ -41,6 +41,7 @@
                   {{#if dcText}}<span class="hz-dc">{{dcText}}</span>{{/if}}
                 </span>
               {{/unless}}
+              {{#unless ../disabled}}{{#if ../../../isGM}}<button type="button" class="hz-icon-btn hz-gm hz-post" data-hz-action="post-check" data-instance-key="{{../key}}" data-disable-id="{{disableId}}" data-tooltip="{{localize 'PF2E_HAZARDER.Tracker.PostCheck'}}" aria-label="{{localize 'PF2E_HAZARDER.Tracker.PostCheck'}}"><i class="fa-solid fa-comment-dots"></i></button>{{/if}}{{/unless}}
               <span class="hz-pips" data-tooltip="{{have}} / {{need}}">
                 {{#each pips}}<span class="hz-pip {{#if filled}}filled{{/if}}" data-hz-action="pip" data-instance-key="{{../../key}}" data-disable-id="{{../disableId}}"></span>{{/each}}
               </span>

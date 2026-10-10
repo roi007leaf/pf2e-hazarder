@@ -34,7 +34,8 @@
       "EditPlan": "Edit plan",
       "DC": "DC {dc}",
       "NoActor": "Select your token first.",
-      "NoStatistic": "{actor} has no {skill} statistic."
+      "NoStatistic": "{actor} has no {skill} statistic.",
+      "PostCheck": "Post this check to chat"
     },
     "Turn": {
       "Title": "{name}'s turn",

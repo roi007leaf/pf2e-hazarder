@@ -873,3 +873,8 @@ button.hazarder-card:disabled {
   border-color: color-mix(in srgb, var(--hz-amber) 50%, transparent);
   color: var(--hz-amber);
 }
+
+.hazarder-card .hz-option .hz-post {
+  width: 26px;
+  height: 26px;
+}
