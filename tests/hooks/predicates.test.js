@@ -2,6 +2,7 @@ import {
   isHazardTurn,
   shouldPromptForPlan,
   shouldSkipTurn,
+  trackerNeedsBump,
 } from '../../scripts/hooks/predicates.js';
 
 const actor = (flags, isComplex = true) => ({
@@ -46,5 +47,25 @@ describe('shouldSkipTurn', () => {
     const p = { prior: { round: 1, turn: 0 }, current: { round: 1, turn: 1 } };
     expect(shouldSkipTurn({ ...p, isDisabledHazard: false, allDisabled: false })).toBe(false);
     expect(shouldSkipTurn({ ...p, isDisabledHazard: true, allDisabled: true })).toBe(false);
+  });
+});
+
+describe('trackerNeedsBump', () => {
+  const ids = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'];
+  test('no bump while the tracker is among the last few messages', () => {
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'm6', status: 'active' })).toBe(false);
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'm3', status: 'active' })).toBe(false);
+  });
+  test('bump once it has scrolled further back, or is missing', () => {
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'm2', status: 'active' })).toBe(true);
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: null, status: 'active' })).toBe(true);
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'gone', status: 'triggered' })).toBe(
+      true,
+    );
+  });
+  test('never bump a disabled, armed or unstarted hazard', () => {
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'm1', status: 'disabled' })).toBe(false);
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'm1', status: 'armed' })).toBe(false);
+    expect(trackerNeedsBump({ messageIds: ids, trackerId: 'm1', status: undefined })).toBe(false);
   });
 });

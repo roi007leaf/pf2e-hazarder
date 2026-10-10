@@ -13,7 +13,12 @@ import { rollDisable } from '../ui/TrackerCard.js';
 import { findStrike, postSaveRequest, postTurnCard, spendFromMessage } from '../ui/TurnCard.js';
 import { decorateTurnCard, nextSpent } from '../ui/turnCardDom.js';
 import { extractSaves } from '../ui/routineParts.js';
-import { isHazardTurn, shouldPromptForPlan, shouldSkipTurn } from './predicates.js';
+import {
+  isHazardTurn,
+  shouldPromptForPlan,
+  shouldSkipTurn,
+  trackerNeedsBump,
+} from './predicates.js';
 
 async function confirmReview(actor) {
   return foundry.applications.api.DialogV2.confirm({
@@ -140,11 +145,7 @@ async function onCardClick(runner, event) {
     ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Errors.NotActiveGM'));
     return;
   }
-  if (action === 'tracker') {
-    // Re-post the tracker at the bottom of the log so it's visible.
-    await game.messages.get(getTrackerMessageId(tokenDoc) ?? '')?.delete();
-    return runner.startHazard(tokenDoc);
-  }
+  if (action === 'tracker') return repostTracker(runner, tokenDoc);
   if (action === 'pip')
     return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
   if (action === 'undo') return runner.undo(tokenDoc);
@@ -163,17 +164,54 @@ async function onCardClick(runner, event) {
   }
 }
 
+/** Move a hazard's disable tracker to the bottom of the chat log. */
+async function repostTracker(runner, tokenDoc) {
+  await game.messages.get(getTrackerMessageId(tokenDoc) ?? '')?.delete();
+  return runner.startHazard(tokenDoc);
+}
+
+/**
+ * PCs disable hazards on their own turns: keep each live hazard's tracker within reach.
+ * Hazards that predate the module (no state yet) get their first tracker here too.
+ */
+async function bumpTrackers(runner, combat) {
+  const messageIds = game.messages.contents.map((m) => m.id);
+  for (const c of combat.combatants) {
+    const token = c.token;
+    if (c.actor?.type !== 'hazard' || !token) continue;
+    const state = getState(token);
+    const trackerId = game.messages.get(getTrackerMessageId(token) ?? '')?.id ?? null;
+    if (!state || trackerNeedsBump({ messageIds, trackerId, status: state.status })) {
+      if (state?.status === STATUS.DISABLED) continue;
+      await repostTracker(runner, token);
+    }
+  }
+}
+
 export function registerHooks(runner) {
   Hooks.on('createCombatant', async (combatant) => {
     if (!runner.isWriter() || combatant.actor?.type !== 'hazard' || !combatant.token) return;
     if (shouldPromptForPlan(combatant.actor) && (await confirmReview(combatant.actor))) {
       await PlanPanel.open(combatant.actor);
     }
-    await runner.startHazard(combatant.token);
+    // Before initiative the tracker would just be buried under initiative rolls; it is posted
+    // when combat starts. A hazard added mid-fight (it just triggered) gets it right away.
+    await runner.startHazard(combatant.token, { tracker: !!combatant.combat?.started });
+  });
+
+  Hooks.on('combatStart', async (combat) => {
+    if (!runner.isWriter()) return;
+    for (const c of combat.combatants) {
+      if (c.actor?.type === 'hazard' && c.token) await runner.startHazard(c.token);
+    }
   });
 
   Hooks.on('combatTurnChange', async (combat, prior, current) => {
-    if (!runner.isWriter() || !isHazardTurn(combat)) return;
+    if (!runner.isWriter()) return;
+    if (!isHazardTurn(combat)) {
+      await bumpTrackers(runner, combat);
+      return;
+    }
     const state = getState(combat.combatant.token);
     if (state?.status === STATUS.DISABLED && game.settings.get(MODULE_ID, 'skipDisabledTurns')) {
       const isDisabledHazard = (c) =>
@@ -183,12 +221,6 @@ export function registerHooks(runner) {
         await combat.nextTurn();
         return;
       }
-    }
-    // Hazards already in combat before the module loaded (or whose tracker was deleted) never
-    // got a disable tracker from createCombatant; post it on their turn.
-    const token = combat.combatant.token;
-    if (!getState(token) || !game.messages.get(getTrackerMessageId(token) ?? '')) {
-      await runner.startHazard(token);
     }
     await postTurnCard(combat.combatant);
   });

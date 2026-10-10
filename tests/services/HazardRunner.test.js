@@ -281,3 +281,13 @@ test('overridePip keeps the instance disabled while another option still meets i
   await runner.overridePip(tokenDoc, 'c1:0', 'd2'); // d2 2/2 → disabled
   expect(tokenDoc.state.instances[0].disabled).toBe(true);
 });
+
+test('startHazard can prepare state without posting the tracker', async () => {
+  const { runner, tokenDoc, ui } = setup();
+  tokenDoc.state = createInitialState(plan);
+  await runner.startHazard(tokenDoc, { tracker: false });
+  expect(tokenDoc.state.status).toBe('active');
+  expect(ui.upsertTracker).not.toHaveBeenCalled();
+  await runner.startHazard(tokenDoc);
+  expect(ui.upsertTracker).toHaveBeenCalledWith(tokenDoc);
+});

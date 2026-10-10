@@ -130,12 +130,12 @@ export class HazardRunner {
     }
   }
 
-  async startHazard(tokenDoc) {
+  async startHazard(tokenDoc, { tracker = true } = {}) {
     return this.#enqueue(tokenDoc, async () => {
       const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
       const state = Engine.activate(this.store.getOrCreateState(tokenDoc, plan));
       await this.store.setState(tokenDoc, state);
-      await this.ui.upsertTracker(tokenDoc);
+      if (tracker) await this.ui.upsertTracker(tokenDoc);
       return state;
     });
   }
