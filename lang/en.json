@@ -12,6 +12,10 @@
       "RemoveDisabled": {
         "Name": "Remove disabled hazards from combat",
         "Hint": "Remove a hazard's combatant once every component is disabled."
+      },
+      "Debug": {
+        "Name": "Debug logging",
+        "Hint": "Log Hazarder decisions (e.g. why an action was or was not counted) to the browser console."
       }
     },
     "Status": {

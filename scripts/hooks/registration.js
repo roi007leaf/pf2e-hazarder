@@ -228,7 +228,10 @@ export function registerHooks(runner) {
 
   Hooks.on('createChatMessage', (message) => {
     runner.handleCheckMessage(message);
-    if (runner.isWriter()) spendFromMessage(message);
+    // Count spent actions on the GM client that created the message (no dependency on which GM
+    // is "active"); messages authored by players fall back to the active GM.
+    const byGM = message.author?.isGM;
+    if (byGM ? message.isAuthor : runner.isWriter()) spendFromMessage(message);
   });
 
   Hooks.on('renderChatMessageHTML', (message, html) => {

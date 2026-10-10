@@ -134,18 +134,24 @@ export function spendFromMessage(message) {
   return spendQueue;
 }
 
+const debug = (...args) => {
+  if (game.settings.get(MODULE_ID, 'debug')) console.log(`${MODULE_ID} | spend:`, ...args);
+};
+
 async function applySpend(message) {
   const combat = game.combat;
   const combatant = combat?.started ? combat.combatant : null;
   const tokenDoc = combatant?.token;
-  if (!tokenDoc || tokenDoc.actor?.type !== 'hazard') return;
+  if (!tokenDoc || tokenDoc.actor?.type !== 'hazard') {
+    return debug('skip: not a hazard turn', message.id);
+  }
   const speaker = message.speaker ?? {};
   const fromHazard = speaker.token
     ? speaker.token === tokenDoc.id
     : !!speaker.actor && speaker.actor === tokenDoc.actorId;
-  if (!fromHazard) return;
+  if (!fromHazard) return debug('skip: message not from the acting hazard', speaker, tokenDoc.id);
   const flags = getSystemFlags(message) ?? {};
-  if (flags.context?.isReroll) return;
+  if (flags.context?.isReroll) return debug('skip: reroll');
   const origin = flags.origin;
   const item = origin?.type === 'action' && origin.uuid ? fromUuidSync(origin.uuid) : null;
   const cost = actionCost({
@@ -155,12 +161,19 @@ async function applySpend(message) {
     actions: item?.system?.actions?.value,
     hazarderCost: message.flags?.[MODULE_ID]?.actionCost,
   });
-  if (!cost) return;
+  if (!cost) {
+    return debug('skip: costs no actions', {
+      contextType: flags.context?.type,
+      origin,
+      actionType: item?.system?.actionType?.value,
+    });
+  }
   const turnMessage = game.messages.get(tokenDoc.getFlag(MODULE_ID, 'turnMessageId') ?? '');
-  if (!turnMessage) return;
+  if (!turnMessage) return debug('skip: no turn card for this hazard');
   const { plan } = getOrDraftPlan(tokenDoc.actor);
   const max = actionsRemaining(getOrCreateState(tokenDoc, plan), plan) ?? 0;
   const spent = turnMessage.getFlag(MODULE_ID, 'spent') ?? 0;
   const next = Math.min(max, spent + cost);
+  debug('apply', { cost, spent, next, max });
   if (next !== spent) await turnMessage.setFlag(MODULE_ID, 'spent', next);
 }

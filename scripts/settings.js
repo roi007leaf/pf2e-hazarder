@@ -20,4 +20,12 @@ export function registerSettings() {
     hint: 'PF2E_HAZARDER.Settings.RemoveDisabled.Hint',
     default: false,
   });
+  game.settings.register(MODULE_ID, 'debug', {
+    scope: 'client',
+    config: true,
+    type: Boolean,
+    name: 'PF2E_HAZARDER.Settings.Debug.Name',
+    hint: 'PF2E_HAZARDER.Settings.Debug.Hint',
+    default: false,
+  });
 }
