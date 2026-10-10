@@ -1,0 +1,153 @@
+import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
+import { getSystemFlags } from '../systemCompat.js';
+import { getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
+import { PlanPanel } from '../ui/PlanPanel.js';
+import { rollDisable } from '../ui/TrackerCard.js';
+import { postTurnCard } from '../ui/TurnCard.js';
+import { isHazardTurn, shouldPromptForPlan } from './predicates.js';
+
+async function confirmReview(actor) {
+  return foundry.applications.api.DialogV2.confirm({
+    window: { title: game.i18n.format('PF2E_HAZARDER.Plan.Title', { name: actor.name }) },
+    content: `<p>${game.i18n.format('PF2E_HAZARDER.Plan.Review', { name: actor.name })}</p>`,
+  });
+}
+
+function instanceLabel(tokenDoc, instanceKey) {
+  const [componentId, index] = instanceKey.split(':');
+  const comp = getOrDraftPlan(tokenDoc.actor).plan.components.find((c) => c.id === componentId);
+  if (!comp) return instanceKey;
+  return comp.count > 1 ? `${comp.name} ${Number(index) + 1}` : comp.name;
+}
+
+function bindApplyLater(runner, message, root) {
+  // Covers checks rolled while no GM was online: the GM can apply them later.
+  if (message.flags?.[MODULE_ID]?.applied || message.flags?.[MODULE_ID]?.candidates?.length) return;
+  const context = getSystemFlags(message)?.context ?? message.flags?.pf2e?.context;
+  if (!context || !['skill-check', 'perception-check'].includes(context.type)) return;
+  if (!runner.getCandidates().length) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.classList.add('hazarder-card');
+  btn.textContent = game.i18n.localize('PF2E_HAZARDER.Match.ApplyTo');
+  btn.addEventListener('click', () => runner.handleCheckMessage(message));
+  root.append(btn);
+}
+
+function bindCandidatePicker(runner, message, root) {
+  const candidates = message.flags?.[MODULE_ID]?.candidates;
+  if (!candidates?.length || message.flags?.[MODULE_ID]?.applied) return;
+  const context = getSystemFlags(message)?.context ?? message.flags?.pf2e?.context;
+  const degree = OUTCOME_TO_DEGREE[context?.outcome];
+  if (degree === undefined) return;
+  const box = document.createElement('div');
+  box.classList.add('hazarder-card', 'hz-picker');
+  box.innerHTML = `<p>${game.i18n.localize('PF2E_HAZARDER.Match.ApplyTo')}</p>`;
+  for (const c of candidates) {
+    const tokenDoc = runner.resolveToken(c.tokenId);
+    if (!tokenDoc) continue;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = `${tokenDoc.name} · ${instanceLabel(tokenDoc, c.instanceKey)}`;
+    btn.addEventListener('click', async () => {
+      const events = await runner.apply(tokenDoc, {
+        instanceKey: c.instanceKey,
+        disableId: c.disableId,
+        degree,
+        actorUuid: message.speaker?.actor ?? null,
+        messageId: message.id,
+        userId: message.author?.id ?? null,
+        isReroll: !!context.isReroll,
+      });
+      if (events.some((e) => e.type !== 'ignored')) await message.setFlag(MODULE_ID, 'applied', true);
+    });
+    box.append(btn);
+  }
+  root.append(box);
+}
+
+async function onCardClick(runner, event) {
+  const el = event.target.closest('[data-hz-action]');
+  if (!el) return;
+  const card = el.closest('[data-token-uuid]');
+  const tokenUuid = el.dataset.tokenUuid ?? card?.dataset.tokenUuid;
+  const action = el.dataset.hzAction;
+  if (action === 'disable') {
+    return rollDisable({ tokenUuid, instanceKey: el.dataset.instanceKey, disableId: el.dataset.disableId });
+  }
+  const tokenDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
+  if (!tokenDoc) return;
+  if (action === 'item') return tokenDoc.actor?.items.get(el.dataset.itemId)?.toMessage();
+  if (!game.user.isGM) return;
+  if (action === 'pip') return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
+  if (action === 'undo') return runner.undo(tokenDoc);
+  if (action === 'reset') {
+    const resetText = getPlan(tokenDoc.actor)?.resetText ?? '';
+    const ok = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize('PF2E_HAZARDER.Tracker.Reset') },
+      content: `<p>${resetText}</p>`,
+    });
+    if (ok) return runner.reset(tokenDoc);
+    return;
+  }
+  if (action === 'plan') {
+    const saved = await PlanPanel.open(tokenDoc.actor);
+    if (saved) return runner.startHazard(tokenDoc);
+  }
+}
+
+export function registerHooks(runner) {
+  Hooks.on('createCombatant', async (combatant) => {
+    if (!runner.isWriter() || combatant.actor?.type !== 'hazard' || !combatant.token) return;
+    if (shouldPromptForPlan(combatant.actor) && (await confirmReview(combatant.actor))) {
+      await PlanPanel.open(combatant.actor);
+    }
+    await runner.startHazard(combatant.token);
+  });
+
+  Hooks.on('combatTurnChange', async (combat) => {
+    if (!runner.isWriter() || !isHazardTurn(combat)) return;
+    const state = getState(combat.combatant.token);
+    if (state?.status === STATUS.DISABLED && game.settings.get(MODULE_ID, 'skipDisabledTurns')) {
+      await combat.nextTurn();
+      return;
+    }
+    await postTurnCard(combat.combatant);
+  });
+
+  Hooks.on('createChatMessage', (message) => {
+    runner.handleCheckMessage(message);
+  });
+
+  Hooks.on('renderChatMessageHTML', (message, html) => {
+    if (!game.user.isGM) html.querySelectorAll('.hz-gm').forEach((el) => el.remove());
+    if (html.querySelector('.hazarder-card')) {
+      html.addEventListener('click', (event) => onCardClick(runner, event));
+    }
+    if (game.user.isGM) {
+      bindCandidatePicker(runner, message, html);
+      // Only offer "apply later" for messages older than this session's live handling.
+      if (Date.now() - (message.timestamp ?? 0) > 5000) bindApplyLater(runner, message, html);
+    }
+  });
+
+  // pf2e actor sheets are AppV1 (ActorSheetPF2e extends foundry.appv1.sheets.ActorSheet, baseApplication
+  // "ActorSheet"), so v14 still fires getActorSheetHeaderButtons via ApplicationV1#_callHooks.
+  Hooks.on('getActorSheetHeaderButtons', (sheet, buttons) => {
+    if (!game.user.isGM || sheet.actor?.type !== 'hazard') return;
+    buttons.unshift({
+      label: 'Hazard Plan',
+      class: 'hazarder-plan',
+      icon: 'fa-solid fa-list-check',
+      onclick: () => PlanPanel.open(sheet.actor),
+    });
+  });
+
+  Hooks.on('updateActor', async (actor, changes) => {
+    if (!runner.isWriter() || actor.type !== 'hazard') return;
+    if (!foundry.utils.hasProperty(changes, `flags.${MODULE_ID}.plan`)) return;
+    for (const t of actor.getActiveTokens(false, true)) {
+      if (getState(t)) await runner.startHazard(t);
+    }
+  });
+}
