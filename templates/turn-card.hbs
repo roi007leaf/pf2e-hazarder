@@ -1,0 +1,16 @@
+<div class="hazarder-card hz-turn" data-token-uuid="{{tokenUuid}}">
+  <h3>{{title}}</h3>
+  {{#if total}}
+    <div class="hz-actions">
+      {{#each pips}}<span class="hz-pip filled {{#if spent}}spent{{/if}}"></span>{{/each}}
+      <span>{{remaining}} / {{total}}</span>
+      {{#if disabledNote}}<em>({{disabledNote}})</em>{{/if}}
+    </div>
+  {{/if}}
+  <div class="hz-routine">{{{routineHtml}}}</div>
+  {{#if items.length}}
+    <div class="hz-items">
+      {{#each items}}<button type="button" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}">{{name}}</button>{{/each}}
+    </div>
+  {{/if}}
+</div>
