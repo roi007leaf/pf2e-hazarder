@@ -76,7 +76,8 @@ Stored at `tokenDoc.flags["pf2e-hazarder"].state`.
 {
   version: 1,
   status: "armed" | "triggered" | "active" | "disabled" | "reset",
-  instances: [ { componentId: "c1", index: 0, successes: 1, disabled: false } ],
+  // progress is per disable option: a mannequin needs 1 Thievery success OR 2 Religion successes
+  instances: [ { componentId: "c1", index: 0, progress: { d1: 0, d2: 1 }, disabled: false } ],
   history: [ { at, kind, instanceKey, delta, messageId, userId } ] // for undo
 }
 ```
@@ -121,7 +122,7 @@ Stored at `tokenDoc.flags["pf2e-hazarder"].state`.
 
 ### Player → GM transport
 
-Players never write hazard flags. Player clients call `User#query` on the active GM with handler registered in `CONFIG.queries["pf2e-hazarder.applyResult"]` (and `.override`). If no GM is online, rolls post normally and nothing is applied; the GM can apply later from the message's "Apply to…" control.
+Players never write hazard flags. Every check posts a chat message, and `createChatMessage` fires on the active GM's client, so the active GM is the single writer: it matches and applies results it observes. No player-initiated write exists in phase 1, so no `User#query` handler is needed yet (revisit if a later phase adds player-side writes). Applied messages get `flags.pf2e-hazarder.applied = true`. If no GM is online, rolls post normally and nothing is applied; the GM later sees an "Apply to hazard" control on unapplied hazard-tagged or matching messages.
 
 ### `ui/` (ApplicationV2)
 
