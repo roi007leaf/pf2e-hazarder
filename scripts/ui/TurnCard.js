@@ -34,7 +34,7 @@ export async function postTurnCard(combatant) {
   });
   if (game.settings.get(MODULE_ID, 'publicFlavorCard')) {
     await ChatMessage.create({
-      content: `<p>${game.i18n.format('PF2E_HAZARDER.Turn.Flavor', { name: tokenDoc.name })}</p>`,
+      content: `<p>${game.i18n.format('PF2E_HAZARDER.Turn.Flavor', { name: foundry.utils.escapeHTML(tokenDoc.name) })}</p>`,
       speaker: ChatMessage.getSpeaker({ token: tokenDoc }),
     });
   }

@@ -10,7 +10,7 @@ import { isHazardTurn, shouldPromptForPlan, shouldSkipTurn } from './predicates.
 async function confirmReview(actor) {
   return foundry.applications.api.DialogV2.confirm({
     window: { title: game.i18n.format('PF2E_HAZARDER.Plan.Title', { name: actor.name }) },
-    content: `<p>${game.i18n.format('PF2E_HAZARDER.Plan.Review', { name: actor.name })}</p>`,
+    content: `<p>${game.i18n.format('PF2E_HAZARDER.Plan.Review', { name: foundry.utils.escapeHTML(actor.name) })}</p>`,
   });
 }
 
@@ -109,7 +109,7 @@ async function onCardClick(runner, event) {
     const resetText = getPlan(tokenDoc.actor)?.resetText ?? '';
     const ok = await foundry.applications.api.DialogV2.confirm({
       window: { title: game.i18n.localize('PF2E_HAZARDER.Tracker.Reset') },
-      content: `<p>${resetText}</p>`,
+      content: `<p>${foundry.utils.escapeHTML(resetText)}</p>`,
     });
     if (ok) return runner.reset(tokenDoc);
     return;
