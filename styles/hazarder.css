@@ -111,9 +111,26 @@
   box-shadow: inset 0 0 0 1px var(--hz-amber-deep);
 }
 
-.hazarder-card .hz-action-pip.spent {
+.hazarder-card .hz-action-pip.lost {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--hz-line);
+  opacity: 0.6;
+}
+
+.hazarder-card .hz-action-pip[data-hz-action] {
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background 120ms ease;
+}
+
+.hazarder-card .hz-action-pip[data-hz-action]:hover {
+  transform: rotate(45deg) scale(1.2);
+}
+
+.hazarder-card .hz-action-pip.used {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--hz-amber-deep);
 }
 
 .hazarder-card .hz-pool-note {
@@ -674,4 +691,119 @@ button.hazarder-card:disabled {
 
 .hazarder-card .hz-info > i {
   margin: 0;
+}
+
+/* Turn card: traits, saves, outcomes, collapse */
+.hazarder-card .hz-header[data-hz-action='toggle-collapse'] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.hazarder-card .hz-collapse-icon {
+  flex: 0 0 auto;
+  color: var(--hz-amber);
+  font-size: var(--font-size-11, 11px);
+  transition: transform 150ms ease;
+}
+
+.hazarder-card.hz-collapsed .hz-collapse-icon {
+  transform: rotate(-90deg);
+}
+
+.hazarder-card.hz-collapsed .hz-body {
+  display: none;
+}
+
+.hazarder-card .hz-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hazarder-card .hz-badge-round {
+  background: transparent;
+  color: var(--hz-amber);
+  box-shadow: inset 0 0 0 1px var(--hz-amber);
+}
+
+.hazarder-card .hz-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.hazarder-card .hz-trait {
+  padding: 0 6px;
+  border: 1px solid var(--hz-amber-deep);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--hz-amber) 12%, transparent);
+  font-size: var(--font-size-10, 10px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.hazarder-card .hz-used {
+  font-weight: 600;
+}
+
+.hazarder-card .hz-saves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hazarder-card .hz-save {
+  flex: 1 1 auto;
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: auto;
+  min-height: 28px;
+  margin: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--hz-armed);
+  border-radius: var(--hz-radius);
+  background: color-mix(in srgb, var(--hz-armed) 14%, transparent);
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hazarder-card .hz-save:hover {
+  background: var(--hz-armed);
+  color: #fff;
+  box-shadow: none;
+}
+
+.hazarder-card .hz-save > i {
+  color: var(--hz-armed);
+}
+
+.hazarder-card .hz-save:hover > i {
+  color: inherit;
+}
+
+.hazarder-card .hz-outcomes {
+  border: 1px solid var(--hz-line);
+  border-radius: var(--hz-radius);
+}
+
+.hazarder-card .hz-outcomes > summary {
+  padding: 4px 8px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hazarder-card .hz-outcomes[open] > summary {
+  border-bottom: 1px solid var(--hz-line);
+}
+
+.hazarder-card .hz-outcomes > .hz-routine {
+  border: none;
+  border-radius: 0 0 var(--hz-radius) var(--hz-radius);
 }

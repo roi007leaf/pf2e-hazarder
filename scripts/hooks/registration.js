@@ -4,7 +4,9 @@ import { getSystemFlags } from '../systemCompat.js';
 import { baseActor, getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
-import { findStrike, postTurnCard } from '../ui/TurnCard.js';
+import { findStrike, postSaveRequest, postTurnCard } from '../ui/TurnCard.js';
+import { decorateTurnCard, nextSpent } from '../ui/turnCardDom.js';
+import { extractSaves } from '../ui/routineParts.js';
 import { isHazardTurn, shouldPromptForPlan, shouldSkipTurn } from './predicates.js';
 
 async function confirmReview(actor) {
@@ -87,6 +89,17 @@ async function onCardClick(runner, event) {
   const card = el.closest('[data-token-uuid]');
   const tokenUuid = el.dataset.tokenUuid ?? card?.dataset.tokenUuid;
   const action = el.dataset.hzAction;
+  if (action === 'toggle-collapse') {
+    el.closest('.hazarder-card')?.classList.toggle('hz-collapsed');
+    return;
+  }
+  if (action === 'spend') {
+    if (!game.user.isGM) return;
+    const message = game.messages.get(el.closest('[data-message-id]')?.dataset.messageId ?? '');
+    if (!message) return;
+    const spent = message.getFlag(MODULE_ID, 'spent') ?? 0;
+    return message.setFlag(MODULE_ID, 'spent', nextSpent(spent, Number(el.dataset.index)));
+  }
   if (action === 'disable') {
     return rollDisable({
       tokenUuid,
@@ -96,6 +109,11 @@ async function onCardClick(runner, event) {
   }
   const tokenDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
   if (!tokenDoc) return;
+  if (action === 'save-targets') {
+    if (!game.user.isGM) return;
+    const save = extractSaves(tokenDoc.actor?.system.details.routine)[Number(el.dataset.saveIndex)];
+    return save ? postSaveRequest(tokenDoc, save.raw) : undefined;
+  }
   if (action === 'item-info')
     return tokenDoc.actor?.items.get(el.dataset.itemId)?.sheet.render(true);
   if (action === 'item') return tokenDoc.actor?.items.get(el.dataset.itemId)?.toMessage();
@@ -163,6 +181,12 @@ export function registerHooks(runner) {
       if (game.pf2e?.settings?.metagame?.dcs === false) {
         html.querySelectorAll('.hz-dc').forEach((el) => el.remove());
       }
+    }
+    if (message.flags?.[MODULE_ID]?.kind === 'turn') {
+      decorateTurnCard(html, {
+        spent: message.getFlag(MODULE_ID, 'spent'),
+        collapsed: message.getFlag(MODULE_ID, 'collapsed'),
+      });
     }
     if (html.querySelector('.hazarder-card')) {
       html.addEventListener('click', (event) => onCardClick(runner, event));

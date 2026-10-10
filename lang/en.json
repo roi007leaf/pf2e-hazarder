@@ -39,7 +39,12 @@
       "Flavor": "{name} acts!",
       "Damage": "Damage",
       "Critical": "Critical",
-      "Details": "Show details"
+      "Details": "Show details",
+      "Round": "Round {round}",
+      "ActionsUsed": "{used} / {total} used",
+      "Outcomes": "Outcomes",
+      "Basic": "Basic",
+      "SaveForTargets": "Post this save for your targets"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",
@@ -72,7 +77,10 @@
       "component-count-unknown": "Found a named component but not how many — set the count.",
       "parse-error": "The parser failed; fill the plan in by hand."
     },
-    "Match": { "ApplyTo": "Apply to hazard…", "Applied": "Applied to {name}" },
+    "Match": {
+      "ApplyTo": "Apply to hazard…",
+      "Applied": "Applied to {name}"
+    },
     "Triggered": {
       "Title": "{name} triggered!",
       "Body": "A critical failure triggered the hazard. Post its reaction?",
@@ -80,6 +88,8 @@
       "NoReaction": "A critical failure triggered the hazard. It has no reaction to post."
     },
     "Disabled": "{name} is disabled.",
-    "Errors": { "NotActiveGM": "Only the active GM can change hazard state." }
+    "Errors": {
+      "NotActiveGM": "Only the active GM can change hazard state."
+    }
   }
 }

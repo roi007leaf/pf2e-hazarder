@@ -21,7 +21,8 @@ test('pips reflect disabled instances', () => {
   });
   expect(v.total).toBe(9);
   expect(v.remaining).toBe(6);
-  expect(v.pips.filter((p) => p.spent)).toHaveLength(3);
+  expect(v.pips.filter((p) => p.lost)).toHaveLength(3);
+  expect(v.pips[0]).toEqual({ index: 0, lost: false });
   expect(v.disabledNote).toBe('PF2E_HAZARDER.Turn.DisabledNote');
   expect(v.items).toEqual([{ id: 'm1', name: 'Fist' }]);
 });
@@ -68,4 +69,39 @@ test('strikes are split from actions and passives are dropped', () => {
     },
   ]);
   expect(v.items).toEqual([{ id: 'a1', name: 'Spectral Uprising' }]);
+});
+
+test('traits, saves, outcomes and round', () => {
+  const v = buildTurnView({
+    name: 'Faith',
+    plan,
+    state: createInitialState(plan),
+    routineHtml: '<p>intro</p>',
+    outcomesHtml: '<p>outcomes</p>',
+    traits: ['divine', 'void-energy'],
+    saves: [{ statistic: 'will', dc: 25, basic: false, raw: '@Check[will|dc:25]' }],
+    round: 3,
+    items: [],
+  });
+  expect(v.traits).toEqual([
+    { slug: 'divine', label: 'Divine' },
+    { slug: 'void-energy', label: 'Void Energy' },
+  ]);
+  expect(v.saves).toEqual([{ raw: '@Check[will|dc:25]', label: 'Will', dc: 25, basic: false }]);
+  expect(v.outcomesHtml).toBe('<p>outcomes</p>');
+  expect(v.roundLabel).toBe('PF2E_HAZARDER.Turn.Round');
+});
+
+test('no round outside combat; defaults for missing extras', () => {
+  const v = buildTurnView({
+    name: 'X',
+    plan,
+    state: createInitialState(plan),
+    routineHtml: '',
+    items: [],
+  });
+  expect(v.roundLabel).toBeNull();
+  expect(v.traits).toEqual([]);
+  expect(v.saves).toEqual([]);
+  expect(v.outcomesHtml).toBeNull();
 });

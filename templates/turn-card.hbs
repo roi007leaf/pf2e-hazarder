@@ -1,16 +1,33 @@
 <div class="hazarder-card hz-turn" data-token-uuid="{{tokenUuid}}">
-  <header class="hz-header">
+  <header class="hz-header" data-hz-action="toggle-collapse">
     <span class="hz-header-icon"><i class="fa-solid fa-hourglass-half"></i></span>
     <span class="hz-header-name">{{title}}</span>
-    {{#if total}}<span class="hz-badge">{{remaining}} / {{total}}</span>{{/if}}
+    {{#if roundLabel}}<span class="hz-badge hz-badge-round">{{roundLabel}}</span>{{/if}}
+    <i class="fa-solid fa-chevron-down hz-collapse-icon"></i>
   </header>
+  <div class="hz-body">
+  {{#if traits.length}}
+    <div class="hz-traits">{{#each traits}}<span class="hz-trait" data-trait="{{slug}}">{{label}}</span>{{/each}}</div>
+  {{/if}}
   {{#if total}}
-    <div class="hz-pool">
-      {{#each pips}}<span class="hz-action-pip {{#if spent}}spent{{/if}}"></span>{{/each}}
-      {{#if disabledNote}}<span class="hz-pool-note">{{disabledNote}}</span>{{/if}}
+    <div class="hz-pool" data-remaining="{{remaining}}">
+      {{#each pips}}<span class="hz-action-pip {{#if lost}}lost{{/if}}" {{#unless lost}}data-hz-action="spend" data-index="{{index}}"{{/unless}}></span>{{/each}}
+      <span class="hz-pool-note hz-used"></span>
+      {{#if disabledNote}}<span class="hz-pool-note">· {{disabledNote}}</span>{{/if}}
     </div>
   {{/if}}
   <div class="hz-routine">{{{routineHtml}}}</div>
+  {{#if saves.length}}
+    <div class="hz-saves">
+      {{#each saves}}<button type="button" class="hz-save" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.SaveForTargets'}}" data-hz-action="save-targets" data-save-index="{{@index}}" data-token-uuid="{{../tokenUuid}}"><i class="fa-solid fa-crosshairs"></i> {{#if basic}}{{localize "PF2E_HAZARDER.Turn.Basic"}} {{/if}}{{label}} <span class="hz-dc">DC {{dc}}</span></button>{{/each}}
+    </div>
+  {{/if}}
+  {{#if outcomesHtml}}
+    <details class="hz-outcomes">
+      <summary>{{localize "PF2E_HAZARDER.Turn.Outcomes"}}</summary>
+      <div class="hz-routine">{{{outcomesHtml}}}</div>
+    </details>
+  {{/if}}
   {{#each strikes}}
     <div class="hz-strike">
       <span class="hz-strike-name">
@@ -36,4 +53,5 @@
       {{/each}}
     </div>
   {{/if}}
+  </div>
 </div>
