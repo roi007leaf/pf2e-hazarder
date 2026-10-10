@@ -95,6 +95,13 @@ async function login(context, url, accountValue, isGM) {
 
 async function restore(record) {
   const failures = [];
+  if (player && record.checkDialogs) {
+    try {
+      await rpc(player.page, 'restoreCheckDialogs', record.checkDialogs);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
   try {
     await rpc(gm.page, 'restoreSettings', record.settings);
   } catch (error) {
@@ -238,6 +245,7 @@ async function run() {
     gm: { user: gm.state.user, scene: gm.state.scene },
     player: { user: player.state.user, scene: player.state.scene },
     settings: await rpc(gm.page, 'settingsSnapshot'),
+    checkDialogs: await rpc(player.page, 'checkDialogsSnapshot'),
   };
   await atomicJson(journalPath, journal);
 

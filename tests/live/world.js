@@ -37,6 +37,31 @@ const totalProgress = (state) =>
     0,
   );
 
+const basePlan = (fixture) => game.actors.get(fixture.hazardActor)?.getFlag(MODULE, 'plan');
+const keyOf = (instance) => `${instance.componentId}:${instance.index}`;
+const triggeredTitle = (tokenDoc) =>
+  game.i18n.format('PF2E_HAZARDER.Triggered.Title', { name: tokenDoc?.name ?? '' });
+
+function openTriggeredPrompt(tokenDoc) {
+  const title = triggeredTitle(tokenDoc);
+  for (const app of foundry.applications.instances.values()) {
+    if (app instanceof foundry.applications.api.DialogV2 && app.title === title && app.rendered)
+      return app;
+  }
+  return null;
+}
+
+function showChatTab() {
+  if (ui.sidebar?.changeTab) ui.sidebar.changeTab('chat', 'primary');
+  else ui.sidebar?.activateTab?.('chat');
+}
+
+function trackerButton(fixture, action) {
+  return document.querySelector(
+    `.hazarder-card[data-token-uuid$="${fixture.hazardToken}"] [data-hz-action="${action}"]`,
+  );
+}
+
 function findDialog(action) {
   for (const app of foundry.applications.instances.values()) {
     if (
@@ -49,9 +74,7 @@ function findDialog(action) {
 }
 
 async function closeTriggeredPrompts(fixture) {
-  const title = game.i18n.format('PF2E_HAZARDER.Triggered.Title', {
-    name: sceneToken(fixture)?.name ?? '',
-  });
+  const title = triggeredTitle(sceneToken(fixture));
   for (const app of [...foundry.applications.instances.values()]) {
     if (app instanceof foundry.applications.api.DialogV2 && app.title === title) await app.close();
   }
@@ -82,6 +105,35 @@ export async function restoreSettings(values) {
   if (!game.user.isGM) throw Error('GM required to restore settings');
   for (const [key, value] of Object.entries(values ?? {}))
     await game.settings.set(MODULE, key, value);
+}
+
+// pf2e stores "show check dialogs" as a per-user flag (game.user.settings.showCheckDialogs);
+// older versions registered a client setting. Snapshot whichever exists so cleanup can restore it.
+const CHECK_DIALOG_FLAG = 'flags.pf2e.settings.showCheckDialogs';
+const hasCheckDialogSetting = () => game.settings.settings.has('pf2e.showCheckDialogs');
+
+export function checkDialogsSnapshot() {
+  if (hasCheckDialogSetting())
+    return { source: 'setting', value: game.settings.get('pf2e', 'showCheckDialogs') };
+  const value = foundry.utils.getProperty(game.user, CHECK_DIALOG_FLAG);
+  return { source: 'flag', present: value !== undefined, value: value ?? null };
+}
+
+async function setCheckDialogs(value) {
+  if (hasCheckDialogSetting()) await game.settings.set('pf2e', 'showCheckDialogs', value);
+  else await game.user.update({ [CHECK_DIALOG_FLAG]: value });
+}
+
+export async function restoreCheckDialogs(snapshot) {
+  if (!snapshot) return;
+  if (snapshot.source === 'setting') {
+    if (hasCheckDialogSetting())
+      await game.settings.set('pf2e', 'showCheckDialogs', snapshot.value);
+  } else if (snapshot.present) {
+    await game.user.update({ [CHECK_DIALOG_FLAG]: snapshot.value });
+  } else if (foundry.utils.getProperty(game.user, CHECK_DIALOG_FLAG) !== undefined) {
+    await game.user.update({ 'flags.pf2e.settings.-=showCheckDialogs': null });
+  }
 }
 
 /** GM: create the flagged scene and player-owned PC. The hazard itself is imported by scenario 1. */
@@ -140,14 +192,15 @@ const steps = {
     const out = [assertion('Wheel of Misery exists in pf2e.hazards', entry)];
     const source = game.actors.fromCompendium(await pack.getDocument(entry._id));
     source.flags = foundry.utils.mergeObject(source.flags ?? {}, flags);
+    // pf2e hazards default to unlinked tokens; keep that so the plan-on-base-actor path is exercised.
     source.prototypeToken = foundry.utils.mergeObject(source.prototypeToken ?? {}, {
-      actorLink: true,
+      actorLink: false,
     });
     const actor = await globalThis.Actor.create(source);
     const scene = game.scenes.get(fixture.scene);
     const tokenData = (await actor.getTokenDocument({ x: 800, y: 500 })).toObject();
     tokenData.flags = foundry.utils.mergeObject(tokenData.flags ?? {}, flags);
-    tokenData.actorLink = true;
+    tokenData.actorLink = false;
     const [token] = await scene.createEmbeddedDocuments('Token', [tokenData]);
     fixture.hazardActor = actor.id;
     fixture.hazardToken = token.id;
@@ -160,6 +213,9 @@ const steps = {
       ),
     );
     out.push(assertion('token placed on the active scene', canvas.scene.tokens.has(token.id)));
+    out.push(
+      assertion('hazard token is unlinked', token.actorLink === false && token.actor?.isToken),
+    );
     // Hazard first so the review prompt (createCombatant hook) fires for it; initiatives are set so the PC acts first.
     const combat = await globalThis.Combat.create({ scene: scene.id, active: true, flags });
     await combat.createEmbeddedDocuments('Combatant', [
@@ -206,6 +262,10 @@ const steps = {
       assertion('plan confirmed', actor.getFlag(MODULE, 'plan').confirmed === true),
       assertion('tracker message exists', tracker.getFlag(MODULE, 'kind') === 'tracker'),
       assertion('token has hazard state', !!sceneToken(fixture).getFlag(MODULE, 'state')),
+      assertion(
+        'plan not written into the token delta',
+        !sceneToken(fixture).delta?.toObject()?.flags?.[MODULE]?.plan,
+      ),
     ];
   },
 
@@ -249,12 +309,11 @@ const steps = {
     token.control({ releaseOthers: true });
     await waitFor(() => canvas.tokens.controlled[0]?.id === token.id, 'PC token control');
     try {
-      await game.settings.set('pf2e', 'showCheckDialogs', false);
+      await setCheckDialogs(false); // restored by run.mjs cleanup from the journal snapshot
     } catch {
-      /* setting may be absent or world-scoped; the dialog is handled below instead */
+      /* the dialog is handled below instead */
     }
-    if (ui.sidebar?.changeTab) ui.sidebar.changeTab('chat', 'primary');
-    else ui.sidebar?.activateTab?.('chat');
+    showChatTab();
     const button = await waitFor(
       () =>
         document.querySelector(
@@ -330,7 +389,7 @@ const steps = {
   // 7. GM: critically succeed on every remaining instance; hazard ends up disabled.
   async 'disable-remaining'(fixture) {
     const tokenDoc = sceneToken(fixture);
-    const plan = tokenDoc.actor.getFlag(MODULE, 'plan');
+    const plan = basePlan(fixture);
     for (const instance of stateOf(tokenDoc).instances) {
       const component = plan.components.find((c) => c.id === instance.componentId);
       for (const disable of component.disables) {
@@ -387,7 +446,172 @@ const steps = {
     return [assertion('hazard reset to armed', stateOf(tokenDoc).status === 'armed')];
   },
 
-  // 9. Delete combat, token and actors; nothing flagged remains.
+  // 9. GM: forced critical failure (no random roll): triggers the hazard and opens the prompt.
+  async 'forced-crit-fail'(fixture) {
+    const tokenDoc = sceneToken(fixture);
+    const plan = basePlan(fixture);
+    const before = stateOf(tokenDoc);
+    const instance = before.instances.find(
+      (i) => plan.components.find((c) => c.id === i.componentId)?.disables.length,
+    );
+    const disable = plan.components.find((c) => c.id === instance.componentId).disables[0];
+    const request = {
+      instanceKey: keyOf(instance),
+      disableId: disable.id,
+      degree: 0,
+      messageId: 'live-critfail',
+    };
+    const events = await api().runner.apply(tokenDoc, request);
+    const after = stateOf(tokenDoc);
+    const prompt = await waitFor(() => openTriggeredPrompt(tokenDoc), 'triggered prompt');
+    const again = await api().runner.apply(tokenDoc, request);
+    const last = after.history.at(-1);
+    const out = [
+      assertion('starts armed', before.status === 'armed', before.status),
+      assertion(
+        'hazardTriggered event emitted',
+        events.some((e) => e.type === 'hazardTriggered'),
+        events,
+      ),
+      assertion('status is triggered', after.status === 'triggered', after.status),
+      assertion('progress unchanged', totalProgress(after) === totalProgress(before)),
+      assertion(
+        'no instance disabled by a critical failure',
+        after.instances.every((i) => !i.disabled),
+      ),
+      assertion(
+        'history records the result',
+        last?.kind === 'result' && last?.messageId === 'live-critfail',
+        last,
+      ),
+      assertion('triggered prompt opened', !!prompt),
+      assertion(
+        'same messageId is ignored as duplicate',
+        again.every((e) => e.type === 'ignored'),
+        again,
+      ),
+    ];
+    await closeTriggeredPrompts(fixture);
+    return out;
+  },
+
+  // 10. GM: apply a scripted success, then the tracker's Undo button reverts it.
+  async 'undo-button'(fixture) {
+    const tokenDoc = sceneToken(fixture);
+    const plan = basePlan(fixture);
+    showChatTab();
+    const before = stateOf(tokenDoc);
+    const instance = before.instances.find(
+      (i) => !i.disabled && plan.components.find((c) => c.id === i.componentId)?.disables.length,
+    );
+    const disable = plan.components.find((c) => c.id === instance.componentId).disables[0];
+    await api().runner.apply(tokenDoc, {
+      instanceKey: keyOf(instance),
+      disableId: disable.id,
+      degree: 2,
+      messageId: 'live-undo',
+    });
+    const applied = stateOf(tokenDoc);
+    const button = await waitFor(() => trackerButton(fixture, 'undo'), 'Undo button', 15000);
+    button.click();
+    await waitFor(
+      () => stateOf(tokenDoc).history.length === before.history.length,
+      'undo to revert the last result',
+    );
+    const after = stateOf(tokenDoc);
+    return [
+      assertion('scripted success added progress', totalProgress(applied) > totalProgress(before)),
+      assertion('Undo reverted progress', totalProgress(after) === totalProgress(before), {
+        before,
+        after,
+      }),
+      assertion(
+        'Undo restored disabled flags and status',
+        after.status === before.status &&
+          after.instances.every((i, n) => i.disabled === before.instances[n].disabled),
+        after,
+      ),
+    ];
+  },
+
+  // 11. GM: two tokens of the same unlinked hazard share a skill+DC; an untagged matching check
+  //     shows the GM picker, and picking applies to the chosen token only.
+  async 'ambiguous-picker'(fixture) {
+    const flags = { [MODULE]: { [MARKER]: fixture.runId } };
+    const scene = game.scenes.get(fixture.scene);
+    const actor = game.actors.get(fixture.hazardActor);
+    const plan = basePlan(fixture);
+    const disable = plan.components.flatMap((c) => c.disables).find((d) => d.skill && d.dc != null);
+    const out = [assertion('plan has a disable with skill and DC', disable, plan.components)];
+    const tokenData = (await actor.getTokenDocument({ x: 1100, y: 500 })).toObject();
+    tokenData.flags = foundry.utils.mergeObject(tokenData.flags ?? {}, flags);
+    tokenData.actorLink = false;
+    const [second] = await scene.createEmbeddedDocuments('Token', [tokenData]);
+    fixture.secondHazardToken = second.id;
+    live().fixture = fixture;
+    await api().startHazard(second);
+    const first = sceneToken(fixture);
+    if (stateOf(first).status === 'armed') await api().startHazard(first);
+    out.push(
+      assertion(
+        'second (unlinked) token shares the base-actor plan',
+        second.actor?.isToken && !second.delta?.toObject()?.flags?.[MODULE]?.plan,
+      ),
+    );
+    showChatTab();
+    const message = await ChatMessage.create({
+      content: '<p>Hazarder live: untagged check</p>',
+      speaker: ChatMessage.getSpeaker({ actor: game.actors.get(fixture.pcActor) }),
+      flags: {
+        ...flags,
+        pf2e: {
+          context: {
+            type: 'skill-check',
+            outcome: 'success',
+            dc: { value: disable.dc },
+            options: [`check:statistic:${disable.skill}`],
+          },
+        },
+      },
+    });
+    const candidates = await waitFor(
+      () => message.getFlag(MODULE, 'candidates'),
+      'ambiguous candidates flag',
+    );
+    out.push(
+      assertion(
+        'candidates span both tokens',
+        new Set(candidates.map((c) => c.tokenId)).size >= 2 &&
+          candidates.some((c) => c.tokenId === second.id),
+        candidates,
+      ),
+    );
+    const buttons = await waitFor(() => {
+      const nodes = document.querySelectorAll(
+        `[data-message-id="${message.id}"] .hz-picker button`,
+      );
+      return nodes.length >= 2 ? [...nodes] : null;
+    }, 'GM picker buttons');
+    out.push(
+      assertion(
+        'GM picker shows one button per candidate',
+        buttons.length === candidates.length,
+        buttons.length,
+      ),
+    );
+    const pick = candidates.findIndex((c) => c.tokenId === second.id);
+    const secondBefore = totalProgress(stateOf(second));
+    const firstBefore = totalProgress(stateOf(first));
+    buttons[pick].click();
+    await waitFor(() => message.getFlag(MODULE, 'applied') === true, 'picked result applied');
+    out.push(
+      assertion('picked token progressed', totalProgress(stateOf(second)) > secondBefore),
+      assertion('other token unchanged', totalProgress(stateOf(first)) === firstBefore),
+    );
+    return out;
+  },
+
+  // 12. Delete combat, token and actors; nothing flagged remains.
   async cleanup(fixture) {
     await cleanup(fixture.runId);
     const remaining = leftovers(fixture.runId);

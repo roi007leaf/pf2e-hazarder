@@ -9,5 +9,9 @@ export const scenarios = [
   { name: 'check-applied', role: 'gm' },
   { name: 'disable-remaining', role: 'gm' },
   { name: 'reset', role: 'gm' },
+  // Scripted scenarios: no dependence on random roll outcomes.
+  { name: 'forced-crit-fail', role: 'gm' },
+  { name: 'undo-button', role: 'gm' },
+  { name: 'ambiguous-picker', role: 'gm' },
   { name: 'cleanup', role: 'gm' },
 ];
