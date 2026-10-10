@@ -173,7 +173,7 @@ async function run() {
   };
   await atomicJson(journalPath, journal);
 
-  let fixture = await rpc(gm.page, 'prepare', { runId: report.runId, playerUserId: player.state.user });
+  let fixture = await rpc(gm.page, 'prepare', { runId: report.runId, playerUserId: player.state.user, expectedWorld });
   await rpc(player.page, 'view', fixture);
 
   const errors = [];

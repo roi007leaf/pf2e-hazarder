@@ -39,6 +39,13 @@ function findDialog(action) {
   return null;
 }
 
+async function closeTriggeredPrompts(fixture) {
+  const title = game.i18n.format('PF2E_HAZARDER.Triggered.Title', { name: sceneToken(fixture)?.name ?? '' });
+  for (const app of [...foundry.applications.instances.values()]) {
+    if (app instanceof foundry.applications.api.DialogV2 && app.title === title) await app.close();
+  }
+}
+
 export function preflight() {
   const module = game.modules.get(MODULE);
   return {
@@ -66,7 +73,10 @@ export async function restoreSettings(values) {
 }
 
 /** GM: create the flagged scene and player-owned PC. The hazard itself is imported by scenario 1. */
-export async function prepare({ runId, playerUserId }) {
+export async function prepare({ runId, playerUserId, expectedWorld }) {
+  if (!expectedWorld || game.world.id !== expectedWorld) {
+    throw Error(`Refusing to prepare outside disposable world "${expectedWorld}" (current: ${game.world.id})`);
+  }
   if (!game.user.isGM || !runId) throw Error('GM run ID required');
   const flags = { [MODULE]: { [MARKER]: runId } };
   const ownership = { default: globalThis.CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE, [playerUserId]: globalThis.CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER };
@@ -213,7 +223,7 @@ const steps = {
       out.push(assertion(`${outcome} advanced progress`, totalProgress(after) > totalProgress(before) || anyDisabled, { before, after }));
     }
     // Clear any triggered prompt so it does not block later steps.
-    findDialog('ok')?.close();
+    await closeTriggeredPrompts(fixture);
     return out;
   },
 
@@ -233,6 +243,7 @@ const steps = {
         });
       }
     }
+    await closeTriggeredPrompts(fixture);
     const state = stateOf(tokenDoc);
     return [
       assertion('every instance disabled', state.instances.every((i) => i.disabled), state.instances),
@@ -248,8 +259,15 @@ const steps = {
       'Reset button',
       15000,
     );
+    await closeTriggeredPrompts(fixture);
+    const existing = new Set(foundry.applications.instances.values());
     button.click();
-    const dialog = await waitFor(() => findDialog('yes'), 'reset confirm dialog');
+    const dialog = await waitFor(() => {
+      for (const app of foundry.applications.instances.values()) {
+        if (!existing.has(app) && app instanceof foundry.applications.api.DialogV2 && app.element?.querySelector('button[data-action="yes"]')) return app;
+      }
+      return null;
+    }, 'reset confirm dialog');
     dialog.element.querySelector('button[data-action="yes"]').click();
     await waitFor(() => stateOf(tokenDoc).status === 'armed', 'armed status');
     return [assertion('hazard reset to armed', stateOf(tokenDoc).status === 'armed')];
