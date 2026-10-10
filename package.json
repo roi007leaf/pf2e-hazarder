@@ -10,9 +10,11 @@
     "format": "prettier --write .",
     "fixtures": "node tools/extract-hazard-fixtures.mjs",
     "test:live": "node tests/live/run.mjs",
+    "test:live:cleanup": "node tests/live/run.mjs --cleanup-only",
     "prepare": "husky"
   },
   "devDependencies": {
+    "@inquirer/prompts": "^8.7.2",
     "@babel/core": "^7.28.3",
     "@babel/preset-env": "^7.28.3",
     "@eslint/js": "^9.35.0",
