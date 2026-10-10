@@ -13,7 +13,10 @@
   <div class="hz-routine">{{{routineHtml}}}</div>
   {{#each strikes}}
     <div class="hz-strike">
-      <span class="hz-strike-name"><i class="fa-solid fa-hand-fist"></i> {{name}}</span>
+      <span class="hz-strike-name">
+        <i class="fa-solid fa-hand-fist"></i> {{name}}
+        <button type="button" class="hz-info-inline" data-hz-action="item-info" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.Details'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.Details'}}"><i class="fa-solid fa-circle-info"></i></button>
+      </span>
       <div class="hz-strike-buttons">
         {{#each variants}}<button type="button" class="hz-chip hz-attack" data-hz-action="strike" data-item-id="{{../id}}" data-variant="{{index}}" data-token-uuid="{{../../tokenUuid}}">{{label}}</button>{{/each}}
         {{#if hasDamage}}
@@ -25,7 +28,12 @@
   {{/each}}
   {{#if items.length}}
     <div class="hz-chips">
-      {{#each items}}<button type="button" class="hz-chip" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}"><i class="fa-solid fa-bolt"></i> {{name}}</button>{{/each}}
+      {{#each items}}
+        <span class="hz-chip-group">
+          <button type="button" class="hz-chip" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}"><i class="fa-solid fa-bolt"></i> {{name}}</button>
+          <button type="button" class="hz-chip hz-info" data-hz-action="item-info" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.Details'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.Details'}}"><i class="fa-solid fa-info"></i></button>
+        </span>
+      {{/each}}
     </div>
   {{/if}}
 </div>

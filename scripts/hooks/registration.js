@@ -96,6 +96,8 @@ async function onCardClick(runner, event) {
   }
   const tokenDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
   if (!tokenDoc) return;
+  if (action === 'item-info')
+    return tokenDoc.actor?.items.get(el.dataset.itemId)?.sheet.render(true);
   if (action === 'item') return tokenDoc.actor?.items.get(el.dataset.itemId)?.toMessage();
   if (action === 'strike' || action === 'strike-damage' || action === 'strike-critical') {
     const strike = findStrike(tokenDoc.actor, el.dataset.itemId);

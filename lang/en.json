@@ -38,7 +38,8 @@
       "DisabledNote": "{count} disabled",
       "Flavor": "{name} acts!",
       "Damage": "Damage",
-      "Critical": "Critical"
+      "Critical": "Critical",
+      "Details": "Show details"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",

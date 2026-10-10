@@ -361,6 +361,43 @@
   box-shadow: none;
 }
 
+.hazarder-card .hz-chip-group {
+  display: inline-flex;
+}
+
+.hazarder-card .hz-chip-group > .hz-chip:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.hazarder-card .hz-chip-group > .hz-info {
+  margin-left: -1px;
+  padding: 3px 8px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  font-size: var(--font-size-11, 11px);
+}
+
+.hazarder-card .hz-info-inline {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0 0 0 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--hz-muted);
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.hazarder-card .hz-info-inline:hover {
+  color: var(--hz-amber-deep);
+  box-shadow: none;
+}
+
 .hazarder-card .hz-chip > i {
   margin-right: 2px;
 }
@@ -633,4 +670,8 @@ button.hazarder-card:disabled {
   border-color: var(--hz-charcoal);
   color: var(--hz-amber);
   box-shadow: none;
+}
+
+.hazarder-card .hz-info > i {
+  margin: 0;
 }
