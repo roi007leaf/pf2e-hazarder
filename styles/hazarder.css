@@ -866,3 +866,10 @@ button.hazarder-card:disabled {
 .hazarder-card .hz-action > .hz-saves {
   padding: 0 8px 6px;
 }
+
+.hazarder-card .hz-header .hz-header-btn {
+  width: 22px;
+  height: 22px;
+  border-color: color-mix(in srgb, var(--hz-amber) 50%, transparent);
+  color: var(--hz-amber);
+}

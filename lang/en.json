@@ -46,7 +46,8 @@
       "Basic": "Basic",
       "SaveForTargets": "Post this save for your targets (one action per target)",
       "PostAction": "Post to chat",
-      "SaveForTargetsAction": "Post this save for your targets"
+      "SaveForTargetsAction": "Post this save for your targets",
+      "ShowTracker": "Show disable tracker"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",

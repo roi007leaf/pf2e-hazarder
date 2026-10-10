@@ -1,7 +1,13 @@
 import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
 import { extractCheck, matchCheck } from '../services/RollMatcher.js';
 import { getSystemFlags } from '../systemCompat.js';
-import { baseActor, getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
+import {
+  baseActor,
+  getOrDraftPlan,
+  getPlan,
+  getState,
+  getTrackerMessageId,
+} from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
 import { findStrike, postSaveRequest, postTurnCard, spendFromMessage } from '../ui/TurnCard.js';
@@ -134,6 +140,11 @@ async function onCardClick(runner, event) {
     ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Errors.NotActiveGM'));
     return;
   }
+  if (action === 'tracker') {
+    // Re-post the tracker at the bottom of the log so it's visible.
+    await game.messages.get(getTrackerMessageId(tokenDoc) ?? '')?.delete();
+    return runner.startHazard(tokenDoc);
+  }
   if (action === 'pip')
     return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
   if (action === 'undo') return runner.undo(tokenDoc);
@@ -172,6 +183,12 @@ export function registerHooks(runner) {
         await combat.nextTurn();
         return;
       }
+    }
+    // Hazards already in combat before the module loaded (or whose tracker was deleted) never
+    // got a disable tracker from createCombatant; post it on their turn.
+    const token = combat.combatant.token;
+    if (!getState(token) || !game.messages.get(getTrackerMessageId(token) ?? '')) {
+      await runner.startHazard(token);
     }
     await postTurnCard(combat.combatant);
   });
