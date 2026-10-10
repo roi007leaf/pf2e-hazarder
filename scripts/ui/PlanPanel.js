@@ -1,6 +1,6 @@
 import { MODULE_ID } from '../constants.js';
 import { getOrDraftPlan, setPlan } from '../stores/hazardStore.js';
-import { formToPlan, planToContext } from './planForm.js';
+import { formToPlan, nextId, planToContext } from './planForm.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -53,15 +53,14 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #addComponent() {
     this.#foldForm();
-    const n = this.plan.components.length + 1;
-    this.plan.components.push({ id: `c${n}`, name: '', count: 1, actionsEach: 0, disables: [], counteract: null });
+    this.plan.components.push({ id: nextId('c', this.plan.components), name: '', count: 1, actionsEach: 0, disables: [], counteract: null });
     this.render();
   }
 
   static #addDisable(event, target) {
     this.#foldForm();
     const comp = this.plan.components[Number(target.dataset.component)];
-    comp.disables.push({ id: `d${comp.disables.length + 1}`, skill: '', dc: null, label: '', traits: [], successesNeeded: 1 });
+    comp.disables.push({ id: nextId('d', comp.disables), skill: '', dc: null, label: '', traits: [], successesNeeded: 1 });
     this.render();
   }
 

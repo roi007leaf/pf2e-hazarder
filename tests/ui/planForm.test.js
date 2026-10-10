@@ -1,4 +1,4 @@
-import { formToPlan, planToContext } from '../../scripts/ui/planForm.js';
+import { formToPlan, planToContext, nextId } from '../../scripts/ui/planForm.js';
 
 const base = {
   version: 1,
@@ -56,4 +56,27 @@ test('planToContext lists warnings and items', () => {
   expect(ctx.warnings).toEqual(['PF2E_HAZARDER.Warnings.no-disables']);
   expect(ctx.items).toEqual([{ id: 'r1', name: 'Awaken' }]);
   expect(ctx.plan).toBe(base);
+});
+
+test('nextId uses max numeric suffix + 1', () => {
+  expect(nextId('d', [])).toBe('d1');
+  expect(nextId('d', [{ id: 'd1' }, { id: 'd3' }])).toBe('d4');
+  expect(nextId('c', [{ id: 'c2' }, { id: 'x' }, {}])).toBe('c3');
+});
+
+test('formToPlan blank component name: previous name, id on submit, empty when keepBlank', () => {
+  const data = { components: { 0: { id: 'c1', name: '' }, 1: { id: 'c2', name: '' } } };
+  const submit = formToPlan(data, base);
+  expect(submit.components[0].name).toBe('x');
+  expect(submit.components[1].name).toBe('c2');
+  const fold = formToPlan(data, base, { keepBlank: true });
+  expect(fold.components[0].name).toBe('x');
+  expect(fold.components[1].name).toBe('');
+});
+
+test('formToPlan assigns non-colliding ids for rows lacking ids', () => {
+  const data = { components: { 0: { id: 'c3', name: 'A', disables: { 0: { id: 'd3', skill: 'a' }, 1: { skill: 'b' } } }, 1: { name: 'B' } } };
+  const plan = formToPlan(data, base);
+  expect(plan.components.map((c) => c.id)).toEqual(['c3', 'c4']);
+  expect(plan.components[0].disables.map((d) => d.id)).toEqual(['d3', 'd4']);
 });

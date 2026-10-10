@@ -4,6 +4,16 @@ const int = (v) => {
 };
 const list = (obj) => (Array.isArray(obj) ? obj : Object.keys(obj ?? {}).sort((a, b) => a - b).map((k) => obj[k]));
 
+export function nextId(prefix, items) {
+  let max = 0;
+  for (const it of items ?? []) {
+    const id = String(it?.id ?? '');
+    const n = id.startsWith(prefix) && /^[0-9]+$/.test(id.slice(prefix.length)) ? Number(id.slice(prefix.length)) : 0;
+    max = Math.max(max, n);
+  }
+  return `${prefix}${max + 1}`;
+}
+
 export function planToContext(plan, warnings, actor) {
   return {
     plan,
@@ -16,14 +26,20 @@ export function planToContext(plan, warnings, actor) {
 
 export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
   const baseComps = new Map(basePlan.components.map((c) => [c.id, c]));
-  const components = list(data.components).map((c, ci) => {
-    const id = c.id || `c${ci + 1}`;
+  const compRows = list(data.components);
+  const compIds = compRows.filter((c) => c.id).map((c) => ({ id: c.id }));
+  const components = compRows.map((c) => {
+    const id = c.id || nextId('c', compIds);
+    if (!c.id) compIds.push({ id });
     const prev = baseComps.get(id);
     const prevDisables = new Map((prev?.disables ?? []).map((d) => [d.id, d]));
-    const disables = list(c.disables)
+    const rows = list(c.disables);
+    const dIds = rows.filter((d) => d.id).map((d) => ({ id: d.id }));
+    const disables = rows
       .filter((d) => keepBlank || (d.skill && String(d.skill).trim()))
-      .map((d, di) => {
-        const did = d.id || `d${di + 1}`;
+      .map((d) => {
+        const did = d.id || nextId('d', dIds);
+        if (!d.id) dIds.push({ id: did });
         const skill = String(d.skill ?? '').trim();
         return {
           id: did,
@@ -36,7 +52,7 @@ export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
       });
     return {
       id,
-      name: (c.name && String(c.name).trim()) || basePlan.components[0]?.name || id,
+      name: (c.name && String(c.name).trim()) || prev?.name || (keepBlank ? '' : id),
       count: Math.max(1, int(c.count) ?? 1),
       actionsEach: Math.max(0, int(c.actionsEach) ?? 0),
       disables,
