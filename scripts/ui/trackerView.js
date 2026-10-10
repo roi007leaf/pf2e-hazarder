@@ -16,6 +16,8 @@ export function buildTrackerView({ name, plan, state, isGM }) {
             label: d.label,
             skill: d.skill,
             dc: d.dc,
+            dcText:
+              d.dc != null ? game.i18n.format('PF2E_HAZARDER.Tracker.DC', { dc: d.dc }) : null,
             have,
             need,
             pips: Array.from({ length: need }, (_, i) => ({ filled: i < have })),

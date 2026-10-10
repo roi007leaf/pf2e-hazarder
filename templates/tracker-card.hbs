@@ -10,13 +10,13 @@
             <span class="hz-option">
               {{#each pips}}<span class="hz-pip {{#if filled}}filled{{/if}}" data-hz-action="pip" data-instance-key="{{../../key}}" data-disable-id="{{../disableId}}"></span>{{/each}}
               {{#unless ../disabled}}
-                <button type="button" data-hz-action="disable" data-instance-key="{{../key}}" data-disable-id="{{disableId}}">{{label}} ({{skill}} DC {{dc}})</button>
+                <button type="button" data-hz-action="disable" data-instance-key="{{../key}}" data-disable-id="{{disableId}}">{{label}} ({{skill}}{{#if dcText}}<span class="hz-dc"> {{dcText}}</span>{{/if}})</button>
               {{/unless}}
             </span>
           {{/each}}
         </div>
       {{/each}}
-      {{#if counteract}}<p class="hz-counteract">@UUID[{{counteractUuid}}]{ {{counteract}} }</p>{{/if}}
+      {{#if counteract}}<p class="hz-counteract">{{#if counteractUuid}}@UUID[{{counteractUuid}}]{ {{counteract}} }{{else}}{{counteract}}{{/if}}</p>{{/if}}
     </div>
   {{/each}}
   {{#if isGM}}

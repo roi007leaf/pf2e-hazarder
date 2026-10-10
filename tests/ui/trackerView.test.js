@@ -50,3 +50,24 @@ test('no disables anywhere is empty and does not throw', () => {
   expect(v.empty).toBe(true);
   expect(v.components[0].instances[0].options).toEqual([]);
 });
+
+test('dcText is omitted when the DC is unknown', () => {
+  const formatSpy = jest.spyOn(game.i18n, 'format');
+  const p = {
+    components: [
+      {
+        ...plan.components[0],
+        disables: [
+          { id: 'd1', skill: 'thievery', dc: 22, label: 'A', successesNeeded: 1 },
+          { id: 'd2', skill: 'arcana', dc: null, label: 'B', successesNeeded: 1 },
+        ],
+      },
+    ],
+  };
+  const v = buildTrackerView({ name: 'W', plan: p, state: createInitialState(p), isGM: true });
+  const [known, unknown] = v.components[0].instances[0].options;
+  expect(known.dcText).toBe('PF2E_HAZARDER.Tracker.DC');
+  expect(formatSpy).toHaveBeenCalledWith('PF2E_HAZARDER.Tracker.DC', { dc: 22 });
+  expect(unknown.dcText).toBeNull();
+  formatSpy.mockRestore();
+});

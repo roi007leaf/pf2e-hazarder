@@ -28,6 +28,7 @@
       "Undo": "Undo last",
       "Reset": "Reset hazard",
       "EditPlan": "Edit plan",
+      "DC": "DC {dc}",
       "NoActor": "Select your token first.",
       "NoStatistic": "{actor} has no {skill} statistic."
     },

@@ -149,7 +149,13 @@ export function registerHooks(runner) {
   });
 
   Hooks.on('renderChatMessageHTML', (message, html) => {
-    if (!game.user.isGM) html.querySelectorAll('.hz-gm').forEach((el) => el.remove());
+    if (!game.user.isGM) {
+      html.querySelectorAll('.hz-gm').forEach((el) => el.remove());
+      // Respect pf2e's "show DCs to players" metagame setting (tracker content is rendered by the GM).
+      if (game.pf2e?.settings?.metagame?.dcs === false) {
+        html.querySelectorAll('.hz-dc').forEach((el) => el.remove());
+      }
+    }
     if (html.querySelector('.hazarder-card')) {
       html.addEventListener('click', (event) => onCardClick(runner, event));
     }
