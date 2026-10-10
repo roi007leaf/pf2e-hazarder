@@ -121,7 +121,12 @@ describe('base actor resolution for unlinked tokens', () => {
         {
           name: 'Pit',
           system: {
-            details: { isComplex: false, routine: '', disable: '@Check[thievery|dc:18]', reset: '' },
+            details: {
+              isComplex: false,
+              routine: '',
+              disable: '@Check[thievery|dc:18]',
+              reset: '',
+            },
           },
           items: [],
         },

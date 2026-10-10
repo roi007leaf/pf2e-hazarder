@@ -22,13 +22,21 @@ function buildInstances(plan) {
   return out;
 }
 
-function allDisabled(state) {
-  return state.instances.length > 0 && state.instances.every((i) => i.disabled);
+// Instances of components with no disable options cannot be disabled by checks, so they do not
+// count toward "all disabled" — unless no component has any, in which case every instance counts.
+function allDisabled(state, plan) {
+  const disableable = new Set(
+    (plan?.components ?? []).filter((c) => c.disables?.length).map((c) => c.id),
+  );
+  const counted = disableable.size
+    ? state.instances.filter((i) => disableable.has(i.componentId))
+    : state.instances;
+  return counted.length > 0 && counted.every((i) => i.disabled);
 }
 
 // Mutates and returns `state`: status is derived from the instance flags.
-function normalize(state) {
-  if (allDisabled(state)) state.status = STATUS.DISABLED;
+function normalize(state, plan) {
+  if (allDisabled(state, plan)) state.status = STATUS.DISABLED;
   else if (state.status === STATUS.DISABLED) state.status = STATUS.ACTIVE;
   return state;
 }
@@ -54,7 +62,7 @@ export function syncStateToPlan(state, plan) {
     }
     return { ...fresh, progress, disabled: prev.disabled };
   });
-  return normalize(next);
+  return normalize(next, plan);
 }
 
 export function activate(state) {
@@ -110,7 +118,7 @@ export function applyResult(state, plan, r) {
     if (idx !== -1) {
       const [entry] = next.history.splice(idx, 1);
       revertEntry(next, plan, entry);
-      normalize(next);
+      normalize(next, plan);
       reverted = true;
     }
   }
@@ -161,7 +169,7 @@ export function applyResult(state, plan, r) {
       events.push({ type: 'instanceDisabled', instanceKey: r.instanceKey });
     }
   }
-  normalize(next);
+  normalize(next, plan);
   if (next.status === STATUS.DISABLED && prevStatus !== STATUS.DISABLED)
     events.push({ type: 'hazardDisabled' });
   next.history.push({
@@ -212,7 +220,7 @@ export function override(state, plan, { instanceKey: key, disableId, progress, d
     entry.disabledChange = { from: inst.disabled, to: target };
     inst.disabled = target;
   }
-  normalize(next);
+  normalize(next, plan);
   if (next.status !== prevStatus) entry.statusChange = { from: prevStatus, to: next.status };
   const events = [];
   if (next.status === STATUS.DISABLED && prevStatus !== STATUS.DISABLED)
@@ -225,7 +233,7 @@ export function undo(state, plan) {
   if (!state.history.length) return state;
   const next = clone(state);
   revertEntry(next, plan, next.history.pop());
-  return normalize(next);
+  return normalize(next, plan);
 }
 
 export function reset(state, plan) {

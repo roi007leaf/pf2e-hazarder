@@ -307,3 +307,39 @@ test('sync re-clamps progress to a lowered successesNeeded', () => {
   s = syncStateToPlan(s, lowered);
   expect(s.instances[0].progress.d2).toBe(1);
 });
+
+describe('components without disable options', () => {
+  const mixed = {
+    actionsPerTurn: 3,
+    components: [
+      {
+        id: 'c1',
+        name: 'lock',
+        count: 1,
+        actionsEach: 1,
+        disables: [{ id: 'd1', skill: 'thievery', dc: 20, successesNeeded: 1 }],
+      },
+      { id: 'c2', name: 'aura', count: 2, actionsEach: 0, disables: [] },
+    ],
+  };
+
+  test('do not block the hazard from reaching disabled', () => {
+    const s0 = activate(createInitialState(mixed));
+    const { state, events } = applyResult(s0, mixed, {
+      instanceKey: instanceKey('c1', 0),
+      disableId: 'd1',
+      degree: DEGREE.SUCCESS,
+    });
+    expect(state.status).toBe('disabled');
+    expect(events.map((e) => e.type)).toContain('hazardDisabled');
+    expect(undo(state, mixed).status).toBe('active');
+  });
+
+  test('when every component lacks disables, results alone cannot disable', () => {
+    const none = { actionsPerTurn: 1, components: [{ id: 'c1', count: 1, disables: [] }] };
+    const s0 = activate(createInitialState(none));
+    expect(syncStateToPlan(s0, none).status).toBe('active');
+    const { state } = override(s0, none, { instanceKey: 'c1:0', disabled: true });
+    expect(state.status).toBe('disabled');
+  });
+});
