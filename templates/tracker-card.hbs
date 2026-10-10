@@ -1,0 +1,29 @@
+<div class="hazarder-card hz-tracker" data-token-uuid="{{tokenUuid}}">
+  <h3>{{title}} <small>({{statusLabel}})</small></h3>
+  {{#if empty}}<p>{{localize "PF2E_HAZARDER.Tracker.NoDisables"}}</p>{{/if}}
+  {{#each components}}
+    <div class="hz-component">
+      {{#each instances}}
+        <div class="hz-instance {{#if disabled}}disabled{{/if}}" data-instance-key="{{key}}">
+          <strong>{{label}}</strong>
+          {{#each options}}
+            <span class="hz-option">
+              {{#each pips}}<span class="hz-pip {{#if filled}}filled{{/if}}" data-hz-action="pip" data-instance-key="{{../../key}}" data-disable-id="{{../disableId}}"></span>{{/each}}
+              {{#unless ../disabled}}
+                <button type="button" data-hz-action="disable" data-instance-key="{{../key}}" data-disable-id="{{disableId}}">{{label}} ({{skill}} DC {{dc}})</button>
+              {{/unless}}
+            </span>
+          {{/each}}
+        </div>
+      {{/each}}
+      {{#if counteract}}<p class="hz-counteract">@UUID[{{counteractUuid}}]{ {{counteract}} }</p>{{/if}}
+    </div>
+  {{/each}}
+  {{#if isGM}}
+    <div class="hz-gm">
+      <button type="button" data-hz-action="undo">{{localize "PF2E_HAZARDER.Tracker.Undo"}}</button>
+      <button type="button" data-hz-action="reset">{{localize "PF2E_HAZARDER.Tracker.Reset"}}</button>
+      <button type="button" data-hz-action="plan">{{localize "PF2E_HAZARDER.Tracker.EditPlan"}}</button>
+    </div>
+  {{/if}}
+</div>
