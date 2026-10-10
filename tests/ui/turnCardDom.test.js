@@ -33,7 +33,7 @@ test('marks spent diamonds and writes the counter', () => {
   decorateTurnCard(root, { spent: 2, collapsed: false });
   const used = [...root.querySelectorAll('.hz-action-pip.used')].map((p) => p.dataset.index);
   expect(used).toEqual(['0', '1']);
-  expect(root.querySelector('.hz-used').textContent).toBe('PF2E_HAZARDER.Turn.ActionsUsed');
+  expect(root.querySelector('.hz-used').textContent).toBe('PF2E_HAZARDER.Turn.ActionsLeft');
   expect(root.querySelector('.hazarder-card').classList.contains('hz-collapsed')).toBe(false);
 });
 

@@ -46,14 +46,14 @@
       "Critical": "Critical",
       "Details": "Show details",
       "Round": "Round {round}",
-      "ActionsUsed": "{used} / {total} used",
       "Outcomes": "Outcomes",
       "Basic": "Basic",
       "SaveForTargets": "Post this save for your targets (one action per target)",
       "PostAction": "Post to chat",
       "SaveForTargetsAction": "Post this save for your targets",
       "ShowTracker": "Show disable tracker",
-      "OpenSheet": "Open hazard sheet"
+      "OpenSheet": "Open hazard sheet",
+      "ActionsLeft": "{left} / {total} actions left"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",

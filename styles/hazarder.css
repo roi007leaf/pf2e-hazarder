@@ -102,35 +102,35 @@
   padding: 0 2px;
 }
 
+/* Action pool uses PF2e's action font (.action-glyph): one "1" glyph per action. */
 .hazarder-card .hz-action-pip {
-  width: 12px;
-  height: 12px;
-  transform: rotate(45deg);
-  border-radius: 2px;
-  background: var(--hz-amber);
-  box-shadow: inset 0 0 0 1px var(--hz-amber-deep);
+  font-size: 18px;
+  line-height: 1;
+  color: var(--hz-amber);
+  text-shadow: 0 0 1px var(--hz-amber-deep);
 }
 
 .hazarder-card .hz-action-pip.lost {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--hz-line);
-  opacity: 0.6;
+  color: var(--hz-muted);
+  opacity: 0.35;
+  text-shadow: none;
 }
 
 .hazarder-card .hz-action-pip[data-hz-action] {
   cursor: pointer;
   transition:
     transform 120ms ease,
-    background 120ms ease;
+    opacity 120ms ease;
 }
 
 .hazarder-card .hz-action-pip[data-hz-action]:hover {
-  transform: rotate(45deg) scale(1.2);
+  transform: scale(1.2);
 }
 
 .hazarder-card .hz-action-pip.used {
-  background: transparent;
-  box-shadow: inset 0 0 0 2px var(--hz-amber-deep);
+  color: var(--hz-muted);
+  opacity: 0.4;
+  text-shadow: none;
 }
 
 .hazarder-card .hz-pool-note {
@@ -890,17 +890,16 @@ button.hazarder-card:disabled {
 
 .hz-ct-pool .hz-ct-pip {
   flex: 0 0 auto;
-  width: 9px;
-  height: 9px;
-  transform: rotate(45deg);
-  border-radius: 1px;
-  background: #e8a317;
-  box-shadow: 0 0 4px rgb(232 163 23 / 60%);
+  font-size: 15px;
+  line-height: 1;
+  color: #e8a317;
+  text-shadow: 0 0 4px rgb(232 163 23 / 55%);
 }
 
 .hz-ct-pool .hz-ct-pip.used {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px rgb(150 150 160 / 55%);
+  color: rgb(150 150 160);
+  opacity: 0.4;
+  text-shadow: none;
 }
 
 .hazarder-card button[data-cost]:disabled {

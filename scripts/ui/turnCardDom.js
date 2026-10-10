@@ -23,8 +23,8 @@ export function decorateTurnCard(root, { spent = 0, collapsed = false } = {}) {
   });
   const counter = pool.querySelector('.hz-used');
   if (counter) {
-    counter.textContent = game.i18n.format('PF2E_HAZARDER.Turn.ActionsUsed', {
-      used: Math.min(spent ?? 0, pips.length),
+    counter.textContent = game.i18n.format('PF2E_HAZARDER.Turn.ActionsLeft', {
+      left,
       total: pips.length,
     });
   }

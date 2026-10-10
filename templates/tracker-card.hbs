@@ -7,7 +7,7 @@
   </header>
   {{#if actions}}
     <div class="hz-pool" data-tooltip="{{actions.remaining}} / {{actions.total}}">
-      {{#each actions.pips}}<span class="hz-action-pip {{#if spent}}lost{{/if}}"></span>{{/each}}
+      {{#each actions.pips}}<span class="hz-action-pip action-glyph {{#if spent}}lost{{/if}}">1</span>{{/each}}
     </div>
   {{/if}}
   {{#if empty}}<p class="hz-empty">{{localize "PF2E_HAZARDER.Tracker.NoDisables"}}</p>{{/if}}

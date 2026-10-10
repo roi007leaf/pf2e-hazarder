@@ -13,7 +13,7 @@
   {{/if}}
   {{#if total}}
     <div class="hz-pool" data-remaining="{{remaining}}">
-      {{#each pips}}<span class="hz-action-pip {{#if lost}}lost{{/if}}" {{#unless lost}}data-hz-action="spend" data-index="{{index}}"{{/unless}}></span>{{/each}}
+      {{#each pips}}<span class="hz-action-pip action-glyph {{#if lost}}lost{{/if}}" {{#unless lost}}data-hz-action="spend" data-index="{{index}}"{{/unless}}>1</span>{{/each}}
       <span class="hz-pool-note hz-used"></span>
       {{#if disabledNote}}<span class="hz-pool-note">· {{disabledNote}}</span>{{/if}}
     </div>

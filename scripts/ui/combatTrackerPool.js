@@ -20,13 +20,15 @@ export function decorateCombatTracker(root, pool) {
 function buildPool({ remaining, spent }) {
   const el = document.createElement('div');
   el.className = 'hz-ct-pool';
-  el.dataset.tooltip = game.i18n.format('PF2E_HAZARDER.Turn.ActionsUsed', {
-    used: Math.min(spent, remaining),
+  el.dataset.tooltip = game.i18n.format('PF2E_HAZARDER.Turn.ActionsLeft', {
+    left: Math.max(0, remaining - spent),
     total: remaining,
   });
   for (let i = 0; i < remaining; i++) {
     const pip = document.createElement('span');
-    pip.className = i < spent ? 'hz-ct-pip used' : 'hz-ct-pip';
+    // PF2e's action font renders "1" as the one-action glyph.
+    pip.className = i < spent ? 'action-glyph hz-ct-pip used' : 'action-glyph hz-ct-pip';
+    pip.textContent = '1';
     el.append(pip);
   }
   return el;

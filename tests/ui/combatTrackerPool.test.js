@@ -10,7 +10,7 @@ test('adds remaining-action diamonds to the acting hazard row only', () => {
   const pool = document.querySelector('[data-combatant-id="h"] .hz-ct-pool');
   expect(pool.querySelectorAll('.hz-ct-pip')).toHaveLength(3);
   expect(pool.querySelectorAll('.hz-ct-pip.used')).toHaveLength(2);
-  expect(pool.dataset.tooltip).toBe('PF2E_HAZARDER.Turn.ActionsUsed');
+  expect(pool.dataset.tooltip).toBe('PF2E_HAZARDER.Turn.ActionsLeft');
   expect(document.querySelector('[data-combatant-id="a"] .hz-ct-pool')).toBeNull();
 });
 
