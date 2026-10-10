@@ -25,15 +25,28 @@ function basePlan(name) {
 function successesAfter(rawDisable, check, nextIndex) {
   const tail = stripHtml(rawDisable.slice(check.end, nextIndex)).split(/[,;]|\bor\b/)[0];
   if (/\btwice\b/i.test(tail)) return 2;
-  const m = /\b(\d+|two|three|four|five|six)\s+times\b/i.exec(tail);
+  const m = /\b(\d+|two|three|four|five|six|seven|eight|nine|ten)\s+times\b/i.exec(tail);
   return m ? toNum(m[1]) : 1;
+}
+
+const PROFICIENCY_RE = /\(\s*(?:untrained|trained|expert|master|legendary)\s*\)/gi;
+const isConnectorOnly = (text) =>
+  stripHtml(text).replace(PROFICIENCY_RE, '').replace(/[,;]|\b(?:or|and)\b/gi, '').trim() === '';
+
+// Alternatives joined only by connectors share the multiplier written after the last one.
+function successesFor(rawDisable, checks) {
+  const counts = checks.map((c, i) => successesAfter(rawDisable, c, checks[i + 1]?.index ?? rawDisable.length));
+  for (let i = checks.length - 2; i >= 0; i--) {
+    if (isConnectorOnly(rawDisable.slice(checks[i].end, checks[i + 1].index))) counts[i] = counts[i + 1];
+  }
+  return counts;
 }
 
 // Routine text opens with "(N actions; traits)", "(six actions)", "(two-actions)", "Routine (N actions)",
 // "N Action:" or just a bare icon digit ("3 For each of its actions...").
 function parseActionsPerTurn(text) {
   const patterns = [
-    new RegExp(`^\\s*(?:routine\\s*)?\\(\\s*(${NUM})[\\s-]+actions?\\b`, 'i'),
+    new RegExp(`^\\s*(?:routine\\s*)?\\(\\s*(${NUM})[\\s-]+actions?\\s*[);,]`, 'i'),
     /^\s*(\d)\s+actions?\s*:/i,
     /^\s*([1-9])\s+(?=[A-Za-z])/,
   ];
@@ -77,9 +90,9 @@ export function draftPlan(source) {
     }
 
     const checks = parseInlineChecks(rawDisable);
+    const successes = successesFor(rawDisable, checks);
     checks.forEach((c, i) => {
-      const next = checks[i + 1]?.index ?? rawDisable.length;
-      const successesNeeded = successesAfter(rawDisable, c, next) ?? 1;
+      const successesNeeded = successes[i];
       if (successesNeeded > 1 && !warnings.includes('successes-heuristic')) {
         warnings.push('successes-heuristic');
       }

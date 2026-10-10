@@ -129,3 +129,34 @@ describe('actions-per-turn formats', () => {
     expect(draftPlan(hazard({ routine: 'On its turn, the fire spreads.' })).plan.actionsPerTurn).toBeNull();
   });
 });
+
+test('"actions per <thing>" is not a per-turn total', () => {
+  const { plan, warnings } = draftPlan(hazard({ routine: '(2 actions per shadow tendril) Each tendril lashes out.' }));
+  expect(plan.actionsPerTurn).toBeNull();
+  expect(warnings).toContain('actions-per-turn-missing');
+});
+
+test('"(1 action, illusion)" still parses', () => {
+  expect(draftPlan(hazard({ routine: '(1 action, illusion, mental) It acts.' })).plan.actionsPerTurn).toBe(1);
+});
+
+describe('multiplier shared across alternatives', () => {
+  const successes = (disable) =>
+    draftPlan(hazard({ routine: '(1 action)', disable })).plan.components[0].disables.map((d) => d.successesNeeded);
+
+  test('two alternatives, trailing twice', () => {
+    expect(successes('@Check[nature|dc:20] or @Check[occultism|dc:20] twice to disperse')).toEqual([2, 2]);
+  });
+
+  test('four alternatives with proficiency parenthetical, four times', () => {
+    expect(
+      successes(
+        '@Check[arcana|dc:25], @Check[nature|dc:25], @Check[occultism|dc:25], or @Check[religion|dc:25] (master) four times',
+      ),
+    ).toEqual([4, 4, 4, 4]);
+  });
+
+  test('separated by prose, no sharing', () => {
+    expect(successes('@Check[thievery|dc:37] to jam, or @Check[religion|dc:35] twice')).toEqual([1, 2]);
+  });
+});
