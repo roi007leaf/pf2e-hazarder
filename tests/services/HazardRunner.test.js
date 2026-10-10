@@ -256,3 +256,28 @@ test('apply with the same messageId twice only changes progress once', async () 
   expect(store.setState.mock.calls.length).toBe(writes);
   expect(tokenDoc.state.instances[0].progress.d1).toBe(1);
 });
+
+test('overridePip keeps the instance disabled while another option still meets its need', async () => {
+  const twoWay = {
+    ...plan,
+    components: [
+      {
+        ...plan.components[0],
+        disables: [
+          { id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 },
+          { id: 'd2', skill: 'arcana', dc: 20, successesNeeded: 2 },
+        ],
+      },
+    ],
+  };
+  const { runner, tokenDoc } = setup({ plan: twoWay });
+  await runner.overridePip(tokenDoc, 'c1:0', 'd1'); // d1 1/1 → disabled
+  expect(tokenDoc.state.instances[0].disabled).toBe(true);
+  await runner.overridePip(tokenDoc, 'c1:0', 'd2'); // d2 1/2, d1 still met
+  expect(tokenDoc.state.instances[0].progress).toEqual({ d1: 1, d2: 1 });
+  expect(tokenDoc.state.instances[0].disabled).toBe(true);
+  await runner.overridePip(tokenDoc, 'c1:0', 'd1'); // d1 cycles to 0, d2 1/2 → not disabled
+  expect(tokenDoc.state.instances[0].disabled).toBe(false);
+  await runner.overridePip(tokenDoc, 'c1:0', 'd2'); // d2 2/2 → disabled
+  expect(tokenDoc.state.instances[0].disabled).toBe(true);
+});

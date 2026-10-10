@@ -176,11 +176,18 @@ export class HazardRunner {
       const need = disable.successesNeeded ?? 1;
       const have = inst.progress[disableId] ?? 0;
       const progress = have >= need ? 0 : have + 1;
+      // Disabled when any option on the instance meets its need after this change.
+      const comp = plan.components.find((c) => c.id === inst.componentId);
+      const disabled = comp.disables.some((d) =>
+        d.id === disableId
+          ? progress >= need
+          : (inst.progress[d.id] ?? 0) >= (d.successesNeeded ?? 1),
+      );
       const { state: next, events } = Engine.override(state, plan, {
         instanceKey,
         disableId,
         progress,
-        disabled: progress >= need,
+        disabled,
       });
       await this.store.setState(tokenDoc, next);
       await this.#afterEvents(tokenDoc, events);
