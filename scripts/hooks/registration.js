@@ -1,7 +1,7 @@
 import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
 import { extractCheck, matchCheck } from '../services/RollMatcher.js';
 import { getSystemFlags } from '../systemCompat.js';
-import { getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
+import { baseActor, getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
 import { postTurnCard } from '../ui/TurnCard.js';
@@ -175,7 +175,10 @@ export function registerHooks(runner) {
   Hooks.on('updateActor', async (actor, changes) => {
     if (!runner.isWriter() || actor.type !== 'hazard') return;
     if (!foundry.utils.hasProperty(changes, `flags.${MODULE_ID}.plan`)) return;
-    for (const t of actor.getActiveTokens(false, true)) {
+    // The plan lives on the base actor; re-sync every token of it (linked or unlinked) in view.
+    const base = baseActor(actor);
+    const tokens = canvas.scene?.tokens?.filter((t) => t.actorId === base.id) ?? [];
+    for (const t of tokens) {
       if (getState(t)) await runner.startHazard(t);
     }
   });

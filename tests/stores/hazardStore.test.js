@@ -1,4 +1,5 @@
 import {
+  baseActor,
   getOrCreateState,
   getOrDraftPlan,
   getPlan,
@@ -76,4 +77,59 @@ test('tracker message id', async () => {
   expect(getTrackerMessageId(t)).toBeNull();
   await setTrackerMessageId(t, 'msg1');
   expect(getTrackerMessageId(t)).toBe('msg1');
+});
+
+describe('base actor resolution for unlinked tokens', () => {
+  afterEach(() => {
+    delete game.actors;
+  });
+
+  function synthetic(base, flags = {}) {
+    return { ...doc(flags, { name: 'token copy' }), id: base.id, isToken: true };
+  }
+
+  test('baseActor returns the world actor for a synthetic token actor', () => {
+    const base = { ...doc(), id: 'A1' };
+    game.actors = new Map([['A1', base]]);
+    expect(baseActor(synthetic(base))).toBe(base);
+    expect(baseActor(base)).toBe(base);
+    expect(baseActor(null)).toBeNull();
+  });
+
+  test('baseActor falls back to the token actor when no base actor exists', () => {
+    game.actors = new Map();
+    const tokenActor = { ...doc(), id: 'gone', isToken: true };
+    expect(baseActor(tokenActor)).toBe(tokenActor);
+  });
+
+  test('setPlan/getPlan via a synthetic actor go through the base actor', async () => {
+    const base = { ...doc(), id: 'A1' };
+    game.actors = new Map([['A1', base]]);
+    const tokenA = synthetic(base);
+    const tokenB = synthetic(base);
+    await setPlan(tokenA, plan);
+    expect(base.flags['pf2e-hazarder'].plan).toEqual(plan);
+    expect(tokenA.flags['pf2e-hazarder'].plan).toBeUndefined();
+    expect(getPlan(tokenB)).toEqual(plan);
+    expect(getOrDraftPlan(tokenB)).toEqual({ plan, warnings: [], isDraft: false });
+  });
+
+  test('getOrDraftPlan drafts from the base actor data', () => {
+    const base = {
+      ...doc(
+        {},
+        {
+          name: 'Pit',
+          system: {
+            details: { isComplex: false, routine: '', disable: '@Check[thievery|dc:18]', reset: '' },
+          },
+          items: [],
+        },
+      ),
+      id: 'A1',
+    };
+    game.actors = new Map([['A1', base]]);
+    const res = getOrDraftPlan(synthetic(base));
+    expect(res.plan.components[0].disables[0].dc).toBe(18);
+  });
 });

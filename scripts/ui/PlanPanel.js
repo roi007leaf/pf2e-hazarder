@@ -1,5 +1,5 @@
 import { MODULE_ID } from '../constants.js';
-import { getOrDraftPlan, setPlan } from '../stores/hazardStore.js';
+import { baseActor, getOrDraftPlan, setPlan } from '../stores/hazardStore.js';
 import { formToPlan, nextId, planToContext } from './planForm.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -23,7 +23,7 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   constructor({ actor, resolve, ...options }) {
     super(options);
-    this.actor = actor;
+    this.actor = baseActor(actor);
     this.resolve = resolve;
     const { plan, warnings } = getOrDraftPlan(actor);
     this.plan = plan;

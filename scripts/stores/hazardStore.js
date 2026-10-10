@@ -4,19 +4,28 @@ import { createInitialState, syncStateToPlan } from '../services/RulesEngine.js'
 
 const copy = (v) => structuredClone(v);
 
+/**
+ * Plans live on the world (base) actor. Unlinked hazard tokens have synthetic actors whose flags
+ * are written into the token's ActorDelta, which would give every token its own plan.
+ */
+export function baseActor(actor) {
+  if (!actor) return null;
+  return actor.isToken ? (game.actors?.get(actor.id) ?? actor) : actor;
+}
+
 export function getPlan(actor) {
-  const p = actor?.getFlag(MODULE_ID, 'plan');
+  const p = baseActor(actor)?.getFlag(MODULE_ID, 'plan');
   return p?.version === PLAN_VERSION ? copy(p) : null;
 }
 
 export async function setPlan(actor, plan) {
-  await actor.setFlag(MODULE_ID, 'plan', copy(plan));
+  await baseActor(actor).setFlag(MODULE_ID, 'plan', copy(plan));
 }
 
 export function getOrDraftPlan(actor) {
   const stored = getPlan(actor);
   if (stored) return { plan: stored, warnings: [], isDraft: !stored.confirmed };
-  const { plan, warnings } = draftPlan(actor.toObject());
+  const { plan, warnings } = draftPlan(baseActor(actor).toObject());
   return { plan, warnings, isDraft: true };
 }
 
