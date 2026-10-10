@@ -30,7 +30,30 @@ export class HazardRunner {
     this.now = now;
   }
 
+  #queues = new Map();
+
+  #enqueue(tokenDoc, fn) {
+    const id = tokenDoc.id;
+    const prev = this.#queues.get(id) ?? Promise.resolve();
+    const run = prev.catch(() => {}).then(fn);
+    const tail = run.catch(() => {});
+    this.#queues.set(id, tail);
+    tail.then(() => {
+      if (this.#queues.get(id) === tail) this.#queues.delete(id);
+    });
+    return run;
+  }
+
   async handleCheckMessage(message) {
+    try {
+      return await this.#handleCheckMessage(message);
+    } catch (err) {
+      console.error('pf2e-hazarder |', err);
+      return { kind: 'error', applied: false };
+    }
+  }
+
+  async #handleCheckMessage(message) {
     const skipped = { kind: 'skipped', applied: false };
     if (!this.isWriter()) return skipped;
     if (message.flags?.[MODULE_ID]?.applied) return skipped;
@@ -48,7 +71,7 @@ export class HazardRunner {
     const [m] = result.matches;
     const tokenDoc = this.resolveToken(m.tokenId);
     if (!tokenDoc) return { kind: result.kind, applied: false };
-    await this.apply(tokenDoc, {
+    const events = await this.apply(tokenDoc, {
       instanceKey: m.instanceKey,
       disableId: m.disableId,
       degree,
@@ -57,70 +80,92 @@ export class HazardRunner {
       userId: message.author?.id ?? null,
       isReroll: !!context.isReroll,
     });
+    if (events.every((e) => e.type === 'ignored')) return { kind: result.kind, applied: false };
     await message.setFlag(MODULE_ID, 'applied', true);
     return { kind: result.kind, applied: true };
   }
 
   async apply(tokenDoc, r) {
-    const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    const state = this.store.getOrCreateState(tokenDoc, plan);
-    const { state: next, events } = Engine.applyResult(state, plan, { ...r, at: this.now() });
-    await this.store.setState(tokenDoc, next);
-    await this.#afterEvents(tokenDoc, plan, events);
-    await this.ui.upsertTracker(tokenDoc);
+    const { events, plan } = await this.#enqueue(tokenDoc, async () => {
+      const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
+      const state = this.store.getOrCreateState(tokenDoc, plan);
+      const { state: next, events } = Engine.applyResult(state, plan, { ...r, at: this.now() });
+      if (events.every((e) => e.type === 'ignored')) return { events, plan };
+      await this.store.setState(tokenDoc, next);
+      await this.#afterEvents(tokenDoc, events);
+      await this.ui.upsertTracker(tokenDoc);
+      return { events, plan };
+    });
+    if (events.some((e) => e.type === 'hazardTriggered')) {
+      Promise.resolve()
+        .then(() => this.ui.showTriggered(tokenDoc, plan))
+        .catch((err) => console.error('pf2e-hazarder |', err));
+    }
     return events;
   }
 
-  async #afterEvents(tokenDoc, plan, events) {
+  async #afterEvents(tokenDoc, events) {
     for (const e of events) {
-      if (e.type === 'hazardTriggered') await this.ui.showTriggered(tokenDoc, plan);
-      if (e.type === 'hazardDisabled') {
-        this.ui.notify(game.i18n.format('PF2E_HAZARDER.Disabled', { name: tokenDoc.name }));
-        if (game.settings?.get(MODULE_ID, 'removeDisabledFromCombat')) {
-          const combatant = game.combat?.combatants?.find((c) => c.tokenId === tokenDoc.id);
-          if (combatant) await combatant.delete();
-        }
+      if (e.type !== 'hazardDisabled') continue;
+      this.ui.notify(game.i18n.format('PF2E_HAZARDER.Disabled', { name: tokenDoc.name }));
+      if (game.settings.get(MODULE_ID, 'removeDisabledFromCombat')) {
+        const combatant = game.combat?.combatants?.find((c) => c.tokenId === tokenDoc.id);
+        if (combatant) await combatant.delete();
       }
     }
   }
 
   async startHazard(tokenDoc) {
-    const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    const state = Engine.activate(this.store.getOrCreateState(tokenDoc, plan));
-    await this.store.setState(tokenDoc, state);
-    await this.ui.upsertTracker(tokenDoc);
-    return state;
+    return this.#enqueue(tokenDoc, async () => {
+      const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
+      const state = Engine.activate(this.store.getOrCreateState(tokenDoc, plan));
+      await this.store.setState(tokenDoc, state);
+      await this.ui.upsertTracker(tokenDoc);
+      return state;
+    });
   }
 
   async undo(tokenDoc) {
-    const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    await this.store.setState(tokenDoc, Engine.undo(this.store.getOrCreateState(tokenDoc, plan), plan));
-    await this.ui.upsertTracker(tokenDoc);
+    return this.#enqueue(tokenDoc, async () => {
+      const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
+      await this.store.setState(tokenDoc, Engine.undo(this.store.getOrCreateState(tokenDoc, plan), plan));
+      await this.ui.upsertTracker(tokenDoc);
+    });
   }
 
   async reset(tokenDoc) {
-    const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    await this.store.setState(tokenDoc, Engine.reset(this.store.getOrCreateState(tokenDoc, plan), plan));
-    await this.ui.upsertTracker(tokenDoc);
+    return this.#enqueue(tokenDoc, async () => {
+      const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
+      await this.store.setState(tokenDoc, Engine.reset(this.store.getOrCreateState(tokenDoc, plan), plan));
+      await this.ui.upsertTracker(tokenDoc);
+    });
   }
 
   async overridePip(tokenDoc, instanceKey, disableId) {
-    const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    const state = this.store.getOrCreateState(tokenDoc, plan);
-    const inst = state.instances.find((i) => Engine.instanceKey(i.componentId, i.index) === instanceKey);
-    const disable = plan.components.find((c) => c.id === inst?.componentId)?.disables.find((d) => d.id === disableId);
-    if (!inst || !disable) return;
-    const need = disable.successesNeeded ?? 1;
-    const have = inst.progress[disableId] ?? 0;
-    const progress = have >= need ? 0 : have + 1;
-    const { state: next, events } = Engine.override(state, plan, {
-      instanceKey,
-      disableId,
-      progress,
-      disabled: progress >= need,
-    });
-    await this.store.setState(tokenDoc, next);
-    await this.#afterEvents(tokenDoc, plan, events);
-    await this.ui.upsertTracker(tokenDoc);
+    const { events, plan } = (await this.#enqueue(tokenDoc, async () => {
+      const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
+      const state = this.store.getOrCreateState(tokenDoc, plan);
+      const inst = state.instances.find((i) => Engine.instanceKey(i.componentId, i.index) === instanceKey);
+      const disable = plan.components.find((c) => c.id === inst?.componentId)?.disables.find((d) => d.id === disableId);
+      if (!inst || !disable) return null;
+      const need = disable.successesNeeded ?? 1;
+      const have = inst.progress[disableId] ?? 0;
+      const progress = have >= need ? 0 : have + 1;
+      const { state: next, events } = Engine.override(state, plan, {
+        instanceKey,
+        disableId,
+        progress,
+        disabled: progress >= need,
+      });
+      await this.store.setState(tokenDoc, next);
+      await this.#afterEvents(tokenDoc, events);
+      await this.ui.upsertTracker(tokenDoc);
+      return { events, plan };
+    })) ?? { events: [] };
+    if (events.some((e) => e.type === 'hazardTriggered')) {
+      Promise.resolve()
+        .then(() => this.ui.showTriggered(tokenDoc, plan))
+        .catch((err) => console.error('pf2e-hazarder |', err));
+    }
   }
 }
