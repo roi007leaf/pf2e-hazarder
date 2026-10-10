@@ -904,3 +904,11 @@ button.hazarder-card:disabled {
   cursor: not-allowed;
   filter: grayscale(0.6);
 }
+
+/* Rows carrying hazard action glyphs grow so the glyphs clear the active-turn border. */
+li.combatant:has(.hz-ct-pool) {
+  height: auto;
+  min-height: fit-content;
+  padding-top: 4px;
+  padding-bottom: 6px;
+}
