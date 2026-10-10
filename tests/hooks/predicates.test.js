@@ -64,6 +64,21 @@ describe('shouldSkipTurn', () => {
       shouldSkipTurn({ ...base, prior: { round: 2, turn: 0 }, current: { round: 1, turn: 3 } }),
     ).toBe(false);
   });
+  test('skips when Foundry has no usable previous turn (reload, combat start)', () => {
+    expect(shouldSkipTurn({ ...base, prior: undefined, current: { round: 1, turn: 3 } })).toBe(
+      true,
+    );
+    expect(
+      shouldSkipTurn({
+        ...base,
+        prior: { round: null, turn: null },
+        current: { round: 1, turn: 0 },
+      }),
+    ).toBe(true);
+    expect(
+      shouldSkipTurn({ ...base, prior: { round: 1, turn: 3 }, current: { round: 1, turn: 3 } }),
+    ).toBe(true);
+  });
   test('does not skip when not a disabled hazard or everyone is disabled', () => {
     const p = { prior: { round: 1, turn: 0 }, current: { round: 1, turn: 1 } };
     expect(shouldSkipTurn({ ...p, isDisabledHazard: false, allDisabled: false })).toBe(false);

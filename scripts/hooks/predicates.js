@@ -13,9 +13,11 @@ export function isHazardTurn(combat) {
 
 export function shouldSkipTurn({ prior, current, isDisabledHazard, allDisabled }) {
   if (!isDisabledHazard || allDisabled) return false;
-  if (current?.round == null || prior?.round == null) return false;
+  // Foundry's previous turn is missing or equal to the current one after a reload or at combat
+  // start; only a clearly backward step (the GM rewinding) keeps a disabled hazard's turn.
+  if (current?.round == null || prior?.round == null) return true;
   if (current.round !== prior.round) return current.round > prior.round;
-  return (current.turn ?? 0) > (prior.turn ?? 0);
+  return (current.turn ?? 0) >= (prior.turn ?? 0);
 }
 
 const BUMP_WINDOW = 5;
