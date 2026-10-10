@@ -89,6 +89,12 @@ export class HazardRunner {
     const { events, plan } = await this.#enqueue(tokenDoc, async () => {
       const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
       const state = this.store.getOrCreateState(tokenDoc, plan);
+      if (r.messageId && !r.isReroll && state.history?.some((h) => h.kind === 'result' && h.messageId === r.messageId)) {
+        return {
+          events: [{ type: 'ignored', reason: 'duplicate-message', instanceKey: r.instanceKey }],
+          plan,
+        };
+      }
       const { state: next, events } = Engine.applyResult(state, plan, { ...r, at: this.now() });
       if (events.every((e) => e.type === 'ignored')) return { events, plan };
       await this.store.setState(tokenDoc, next);

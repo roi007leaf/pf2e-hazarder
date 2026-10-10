@@ -9,7 +9,8 @@ const plan = {
   reactionItemId: 'r1',
 };
 
-function setup({ writer = true } = {}) {
+function setup({ writer = true, plan: planOverride = plan } = {}) {
+  const plan = planOverride;
   const tokenDoc = { id: 't1', name: 'Wheel', state: activate(createInitialState(plan)) };
   const store = {
     getOrDraftPlan: () => ({ plan, warnings: [], isDraft: false }),
@@ -203,4 +204,18 @@ describe('fix round 1', () => {
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
   });
+});
+
+test('apply with the same messageId twice only changes progress once', async () => {
+  const bigPlan = structuredClone(plan);
+  bigPlan.components[0].disables[0].successesNeeded = 3;
+  const { runner, tokenDoc, store } = setup({ plan: bigPlan });
+  const r = { instanceKey: 'c1:0', disableId: 'd1', degree: 2, messageId: 'm9', isReroll: false };
+  const first = await runner.apply(tokenDoc, r);
+  expect(first.some((e) => e.type === 'progress')).toBe(true);
+  const writes = store.setState.mock.calls.length;
+  const second = await runner.apply(tokenDoc, r);
+  expect(second).toEqual([{ type: 'ignored', reason: 'duplicate-message', instanceKey: 'c1:0' }]);
+  expect(store.setState.mock.calls.length).toBe(writes);
+  expect(tokenDoc.state.instances[0].progress.d1).toBe(1);
 });

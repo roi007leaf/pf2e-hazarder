@@ -1,10 +1,11 @@
 import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
+import { extractCheck, matchCheck } from '../services/RollMatcher.js';
 import { getSystemFlags } from '../systemCompat.js';
 import { getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
 import { postTurnCard } from '../ui/TurnCard.js';
-import { isHazardTurn, shouldPromptForPlan } from './predicates.js';
+import { isHazardTurn, shouldPromptForPlan, shouldSkipTurn } from './predicates.js';
 
 async function confirmReview(actor) {
   return foundry.applications.api.DialogV2.confirm({
@@ -25,12 +26,16 @@ function bindApplyLater(runner, message, root) {
   if (message.flags?.[MODULE_ID]?.applied || message.flags?.[MODULE_ID]?.candidates?.length) return;
   const context = getSystemFlags(message)?.context ?? message.flags?.pf2e?.context;
   if (!context || !['skill-check', 'perception-check'].includes(context.type)) return;
-  if (!runner.getCandidates().length) return;
+  if (matchCheck(extractCheck(context), runner.getCandidates()).kind === 'none') return;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.classList.add('hazarder-card');
   btn.textContent = game.i18n.localize('PF2E_HAZARDER.Match.ApplyTo');
-  btn.addEventListener('click', () => runner.handleCheckMessage(message));
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const res = await runner.handleCheckMessage(message);
+    if (!res?.applied) btn.disabled = false;
+  });
   root.append(btn);
 }
 
@@ -50,16 +55,26 @@ function bindCandidatePicker(runner, message, root) {
     btn.type = 'button';
     btn.textContent = `${tokenDoc.name} · ${instanceLabel(tokenDoc, c.instanceKey)}`;
     btn.addEventListener('click', async () => {
-      const events = await runner.apply(tokenDoc, {
-        instanceKey: c.instanceKey,
-        disableId: c.disableId,
-        degree,
-        actorUuid: message.speaker?.actor ?? null,
-        messageId: message.id,
-        userId: message.author?.id ?? null,
-        isReroll: !!context.isReroll,
-      });
-      if (events.some((e) => e.type !== 'ignored')) await message.setFlag(MODULE_ID, 'applied', true);
+      const buttons = box.querySelectorAll('button');
+      buttons.forEach((b) => (b.disabled = true));
+      let applied = false;
+      try {
+        const events = await runner.apply(tokenDoc, {
+          instanceKey: c.instanceKey,
+          disableId: c.disableId,
+          degree,
+          actorUuid: message.speaker?.actor ?? null,
+          messageId: message.id,
+          userId: message.author?.id ?? null,
+          isReroll: !!context.isReroll,
+        });
+        if (events.some((e) => e.type !== 'ignored')) {
+          applied = true;
+          await message.setFlag(MODULE_ID, 'applied', true);
+        }
+      } finally {
+        if (!applied) buttons.forEach((b) => (b.disabled = false));
+      }
     });
     box.append(btn);
   }
@@ -73,13 +88,22 @@ async function onCardClick(runner, event) {
   const tokenUuid = el.dataset.tokenUuid ?? card?.dataset.tokenUuid;
   const action = el.dataset.hzAction;
   if (action === 'disable') {
-    return rollDisable({ tokenUuid, instanceKey: el.dataset.instanceKey, disableId: el.dataset.disableId });
+    return rollDisable({
+      tokenUuid,
+      instanceKey: el.dataset.instanceKey,
+      disableId: el.dataset.disableId,
+    });
   }
   const tokenDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
   if (!tokenDoc) return;
   if (action === 'item') return tokenDoc.actor?.items.get(el.dataset.itemId)?.toMessage();
   if (!game.user.isGM) return;
-  if (action === 'pip') return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
+  if (!runner.isWriter()) {
+    ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Errors.NotActiveGM'));
+    return;
+  }
+  if (action === 'pip')
+    return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
   if (action === 'undo') return runner.undo(tokenDoc);
   if (action === 'reset') {
     const resetText = getPlan(tokenDoc.actor)?.resetText ?? '';
@@ -105,12 +129,17 @@ export function registerHooks(runner) {
     await runner.startHazard(combatant.token);
   });
 
-  Hooks.on('combatTurnChange', async (combat) => {
+  Hooks.on('combatTurnChange', async (combat, prior, current) => {
     if (!runner.isWriter() || !isHazardTurn(combat)) return;
     const state = getState(combat.combatant.token);
     if (state?.status === STATUS.DISABLED && game.settings.get(MODULE_ID, 'skipDisabledTurns')) {
-      await combat.nextTurn();
-      return;
+      const isDisabledHazard = (c) =>
+        c.actor?.type === 'hazard' && getState(c.token)?.status === STATUS.DISABLED;
+      const allDisabled = combat.combatants.every(isDisabledHazard);
+      if (shouldSkipTurn({ prior, current, isDisabledHazard: true, allDisabled })) {
+        await combat.nextTurn();
+        return;
+      }
     }
     await postTurnCard(combat.combatant);
   });
@@ -124,7 +153,7 @@ export function registerHooks(runner) {
     if (html.querySelector('.hazarder-card')) {
       html.addEventListener('click', (event) => onCardClick(runner, event));
     }
-    if (game.user.isGM) {
+    if (runner.isWriter()) {
       bindCandidatePicker(runner, message, html);
       // Only offer "apply later" for messages older than this session's live handling.
       if (Date.now() - (message.timestamp ?? 0) > 5000) bindApplyLater(runner, message, html);
@@ -136,7 +165,7 @@ export function registerHooks(runner) {
   Hooks.on('getActorSheetHeaderButtons', (sheet, buttons) => {
     if (!game.user.isGM || sheet.actor?.type !== 'hazard') return;
     buttons.unshift({
-      label: 'Hazard Plan',
+      label: game.i18n.localize('PF2E_HAZARDER.Plan.HeaderButton'),
       class: 'hazarder-plan',
       icon: 'fa-solid fa-list-check',
       onclick: () => PlanPanel.open(sheet.actor),
