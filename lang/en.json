@@ -72,7 +72,8 @@
     "Triggered": {
       "Title": "{name} triggered!",
       "Body": "A critical failure triggered the hazard. Post its reaction?",
-      "Fire": "Post reaction"
+      "Fire": "Post reaction",
+      "NoReaction": "A critical failure triggered the hazard. It has no reaction to post."
     },
     "Disabled": "{name} is disabled.",
     "Errors": { "NotActiveGM": "Only the active GM can change hazard state." }
