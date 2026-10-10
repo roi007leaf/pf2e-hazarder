@@ -4,7 +4,7 @@ import { getSystemFlags } from '../systemCompat.js';
 import { baseActor, getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
-import { findStrike, postSaveRequest, postTurnCard } from '../ui/TurnCard.js';
+import { findStrike, postSaveRequest, postTurnCard, spendFromMessage } from '../ui/TurnCard.js';
 import { decorateTurnCard, nextSpent } from '../ui/turnCardDom.js';
 import { extractSaves } from '../ui/routineParts.js';
 import { isHazardTurn, shouldPromptForPlan, shouldSkipTurn } from './predicates.js';
@@ -117,7 +117,8 @@ async function onCardClick(runner, event) {
       ? tokenDoc.actor?.items.get(el.dataset.itemId)?.system.description?.value
       : tokenDoc.actor?.system.details.routine;
     const save = extractSaves(source)[Number(el.dataset.saveIndex)];
-    return save ? postSaveRequest(tokenDoc, save.raw) : undefined;
+    const fromItem = el.dataset.itemId ? tokenDoc.actor?.items.get(el.dataset.itemId) : null;
+    return save ? postSaveRequest(tokenDoc, save.raw, fromItem) : undefined;
   }
   if (action === 'item-info')
     return tokenDoc.actor?.items.get(el.dataset.itemId)?.sheet.render(true);
@@ -177,6 +178,7 @@ export function registerHooks(runner) {
 
   Hooks.on('createChatMessage', (message) => {
     runner.handleCheckMessage(message);
+    if (runner.isWriter()) spendFromMessage(message);
   });
 
   Hooks.on('renderChatMessageHTML', (message, html) => {

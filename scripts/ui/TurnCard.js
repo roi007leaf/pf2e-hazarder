@@ -1,4 +1,7 @@
 import { MODULE_ID } from '../constants.js';
+import { actionCost, saveRequestCost } from '../services/actionSpend.js';
+import { actionsRemaining } from '../services/RulesEngine.js';
+import { getSystemFlags } from '../systemCompat.js';
 import { getOrCreateState, getOrDraftPlan } from '../stores/hazardStore.js';
 import { buildSaveRequest, toolbeltTargetHelper } from '../integrations/toolbelt.js';
 import { extractSaves, splitRoutine } from './routineParts.js';
@@ -103,7 +106,7 @@ async function collapsePreviousTurnCard(tokenDoc) {
 }
 
 /** Post a routine's saving throw for the GM's current targets (upgraded by PF2e Toolbelt if active). */
-export async function postSaveRequest(tokenDoc, raw) {
+export async function postSaveRequest(tokenDoc, raw, fromItem = null) {
   const targetUuids = [...(game.user.targets ?? [])].map((t) => t.document.uuid);
   const data = buildSaveRequest({
     raw,
@@ -111,5 +114,53 @@ export async function postSaveRequest(tokenDoc, raw) {
     targetUuids,
     targetHelper: toolbeltTargetHelper(),
   });
+  foundry.utils.setProperty(data, `flags.${MODULE_ID}`, {
+    kind: 'save-request',
+    actionCost: saveRequestCost({ fromItem, targets: targetUuids.length }),
+  });
   return ChatMessage.create(data);
+}
+
+let spendQueue = Promise.resolve();
+
+/**
+ * Count the actions a chat message represents against the acting hazard's current turn card.
+ * Runs on the active GM only; serialized so quick successive messages don't overwrite each other.
+ */
+export function spendFromMessage(message) {
+  spendQueue = spendQueue
+    .then(() => applySpend(message))
+    .catch((err) => console.error(`${MODULE_ID} |`, err));
+  return spendQueue;
+}
+
+async function applySpend(message) {
+  const combat = game.combat;
+  const combatant = combat?.started ? combat.combatant : null;
+  const tokenDoc = combatant?.token;
+  if (!tokenDoc || tokenDoc.actor?.type !== 'hazard') return;
+  const speaker = message.speaker ?? {};
+  const fromHazard = speaker.token
+    ? speaker.token === tokenDoc.id
+    : !!speaker.actor && speaker.actor === tokenDoc.actorId;
+  if (!fromHazard) return;
+  const flags = getSystemFlags(message) ?? {};
+  if (flags.context?.isReroll) return;
+  const origin = flags.origin;
+  const item = origin?.type === 'action' && origin.uuid ? fromUuidSync(origin.uuid) : null;
+  const cost = actionCost({
+    contextType: flags.context?.type,
+    originType: origin?.type,
+    actionType: item?.system?.actionType?.value,
+    actions: item?.system?.actions?.value,
+    hazarderCost: message.flags?.[MODULE_ID]?.actionCost,
+  });
+  if (!cost) return;
+  const turnMessage = game.messages.get(tokenDoc.getFlag(MODULE_ID, 'turnMessageId') ?? '');
+  if (!turnMessage) return;
+  const { plan } = getOrDraftPlan(tokenDoc.actor);
+  const max = actionsRemaining(getOrCreateState(tokenDoc, plan), plan) ?? 0;
+  const spent = turnMessage.getFlag(MODULE_ID, 'spent') ?? 0;
+  const next = Math.min(max, spent + cost);
+  if (next !== spent) await turnMessage.setFlag(MODULE_ID, 'spent', next);
 }

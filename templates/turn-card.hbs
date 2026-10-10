@@ -55,7 +55,7 @@
       {{#if descriptionHtml}}<div class="hz-action-body">{{{descriptionHtml}}}</div>{{/if}}
       {{#if saves.length}}
         <div class="hz-saves">
-          {{#each saves}}<button type="button" class="hz-save" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.SaveForTargets'}}" data-hz-action="save-targets" data-item-id="{{../id}}" data-save-index="{{index}}" data-token-uuid="{{../../tokenUuid}}"><i class="fa-solid fa-crosshairs"></i> {{#if basic}}{{localize "PF2E_HAZARDER.Turn.Basic"}} {{/if}}{{label}} <span class="hz-dc">DC {{dc}}</span></button>{{/each}}
+          {{#each saves}}<button type="button" class="hz-save" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.SaveForTargetsAction'}}" data-hz-action="save-targets" data-item-id="{{../id}}" data-save-index="{{index}}" data-token-uuid="{{../../tokenUuid}}"><i class="fa-solid fa-crosshairs"></i> {{#if basic}}{{localize "PF2E_HAZARDER.Turn.Basic"}} {{/if}}{{label}} <span class="hz-dc">DC {{dc}}</span></button>{{/each}}
         </div>
       {{/if}}
     </details>
