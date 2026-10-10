@@ -3,6 +3,7 @@
     <span class="hz-header-icon"><i class="fa-solid fa-hourglass-half"></i></span>
     <span class="hz-header-name">{{title}}</span>
     {{#if roundLabel}}<span class="hz-badge hz-badge-round">{{roundLabel}}</span>{{/if}}
+    <button type="button" class="hz-icon-btn hz-header-btn hz-gm" data-hz-action="hazard-sheet" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.OpenSheet'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.OpenSheet'}}"><i class="fa-solid fa-circle-info"></i></button>
     <button type="button" class="hz-icon-btn hz-header-btn" data-hz-action="tracker" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.ShowTracker'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.ShowTracker'}}"><i class="fa-solid fa-screwdriver-wrench"></i></button>
     <i class="fa-solid fa-chevron-down hz-collapse-icon"></i>
   </header>

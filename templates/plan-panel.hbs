@@ -1,4 +1,5 @@
 <section class="hazarder-plan-body">
+  <datalist id="hazarder-skills">{{#each skills}}<option value="{{slug}}">{{label}}</option>{{/each}}</datalist>
   {{#if warnings.length}}
     <div class="hz-banner" role="status">
       <i class="fa-solid fa-triangle-exclamation"></i>
@@ -64,7 +65,7 @@
           {{#each c.disables as |d di|}}
             <div class="hz-grid-row">
               <input type="hidden" name="components.{{ci}}.disables.{{di}}.id" value="{{d.id}}" />
-              <input type="text" name="components.{{ci}}.disables.{{di}}.skill" value="{{d.skill}}" placeholder="thievery" />
+              <input type="text" name="components.{{ci}}.disables.{{di}}.skill" value="{{d.skill}}" list="hazarder-skills" autocomplete="off" placeholder="thievery" />
               <input type="number" name="components.{{ci}}.disables.{{di}}.dc" value="{{d.dc}}" />
               <input type="text" name="components.{{ci}}.disables.{{di}}.label" value="{{d.label}}" />
               <input type="number" min="1" name="components.{{ci}}.disables.{{di}}.successesNeeded" value="{{d.successesNeeded}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}" />

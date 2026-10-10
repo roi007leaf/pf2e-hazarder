@@ -1,9 +1,10 @@
-import { getPlan } from '../stores/hazardStore.js';
+import { getOrDraftPlan } from '../stores/hazardStore.js';
 
+/** Ask the GM to review only when the parser flagged something; clean drafts are used as-is. */
 export function shouldPromptForPlan(actor) {
   if (actor?.type !== 'hazard' || !actor.isComplex) return false;
-  const plan = getPlan(actor);
-  return !plan || !plan.confirmed;
+  const { isDraft, warnings } = getOrDraftPlan(actor);
+  return isDraft && warnings.length > 0;
 }
 
 export function isHazardTurn(combat) {

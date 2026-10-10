@@ -51,7 +51,7 @@ test('disables come from inline checks on one implicit component', () => {
   ]);
 });
 
-test('"twice" after a check sets successesNeeded 2 with a warning', () => {
+test('"twice" written right after a check is trusted: no warning', () => {
   const { plan, warnings } = draftPlan(
     hazard({
       routine: '(9 actions)',
@@ -59,7 +59,24 @@ test('"twice" after a check sets successesNeeded 2 with a warning', () => {
     }),
   );
   expect(plan.components[0].disables[0].successesNeeded).toBe(2);
+  expect(warnings).not.toContain('successes-heuristic');
+});
+
+test('a count shared across alternatives is a guess and warns', () => {
+  const { plan, warnings } = draftPlan(
+    hazard({
+      routine: '(1 action)',
+      disable: '@Check[nature|dc:20] or @Check[occultism|dc:20] twice to disperse',
+    }),
+  );
+  expect(plan.components[0].disables.map((d) => d.successesNeeded)).toEqual([2, 2]);
   expect(warnings).toContain('successes-heuristic');
+});
+
+test('no routine text at all: no actions warning', () => {
+  const { plan, warnings } = draftPlan(hazard({ routine: '', disable: '@Check[survival|dc:18]' }));
+  expect(plan.actionsPerTurn).toBeNull();
+  expect(warnings).toEqual([]);
 });
 
 test('"twice" belonging to a later check does not leak backwards', () => {

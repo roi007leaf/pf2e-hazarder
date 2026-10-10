@@ -48,15 +48,19 @@ const isConnectorOnly = (text) =>
     .trim() === '';
 
 // Alternatives joined only by connectors share the multiplier written after the last one.
+// A count written right after its own check is explicit; a shared one is inferred (a guess).
 function successesFor(rawDisable, checks) {
   const counts = checks.map((c, i) =>
     successesAfter(rawDisable, c, checks[i + 1]?.index ?? rawDisable.length),
   );
+  const inferred = checks.map(() => false);
   for (let i = checks.length - 2; i >= 0; i--) {
-    if (isConnectorOnly(rawDisable.slice(checks[i].end, checks[i + 1].index)))
+    if (isConnectorOnly(rawDisable.slice(checks[i].end, checks[i + 1].index))) {
+      inferred[i] = counts[i] !== counts[i + 1];
       counts[i] = counts[i + 1];
+    }
   }
-  return counts;
+  return { counts, inferred };
 }
 
 // Routine text opens with "(N actions; traits)", "(six actions)", "(two-actions)", "Routine (N actions)",
@@ -97,7 +101,8 @@ export function draftPlan(source) {
     const apt = parseActionsPerTurn(routineText);
     if (details.isComplex) {
       if (apt) plan.actionsPerTurn = apt;
-      else warnings.push('actions-per-turn-missing');
+      // No routine text at all (the hazard only reacts): nothing to find, nothing to warn about.
+      else if (routineText) warnings.push('actions-per-turn-missing');
     }
 
     const component = plan.components[0];
@@ -111,8 +116,8 @@ export function draftPlan(source) {
     const checks = parseInlineChecks(rawDisable);
     const successes = successesFor(rawDisable, checks);
     checks.forEach((c, i) => {
-      const successesNeeded = successes[i];
-      if (successesNeeded > 1 && !warnings.includes('successes-heuristic')) {
+      const successesNeeded = successes.counts[i];
+      if (successes.inferred[i] && !warnings.includes('successes-heuristic')) {
         warnings.push('successes-heuristic');
       }
       component.disables.push({

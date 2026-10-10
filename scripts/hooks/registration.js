@@ -141,6 +141,7 @@ async function onCardClick(runner, event) {
     return action === 'strike-damage' ? strike.damage?.({ event }) : strike.critical?.({ event });
   }
   if (!game.user.isGM) return;
+  if (action === 'hazard-sheet') return tokenDoc.actor?.sheet.render(true);
   if (!runner.isWriter()) {
     ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Errors.NotActiveGM'));
     return;

@@ -1,4 +1,4 @@
-import { formToPlan, planToContext, nextId } from '../../scripts/ui/planForm.js';
+import { formToPlan, planToContext, nextId, skillOptions } from '../../scripts/ui/planForm.js';
 
 const base = {
   version: 1,
@@ -188,4 +188,32 @@ test('planToContext marks routine items as checked', () => {
   };
   const ctx = planToContext({ ...base, reactionItemId: 'r1', routineItemIds: ['m1'] }, [], actor);
   expect(ctx.routineItems).toEqual([{ id: 'm1', name: 'Slam', checked: true }]);
+});
+
+describe('skillOptions', () => {
+  afterEach(() => delete global.CONFIG);
+
+  test('lists system skills plus perception, sorted by label', () => {
+    global.CONFIG = {
+      PF2E: {
+        skills: {
+          thievery: { label: 'PF2E.Skill.Thievery' },
+          arcana: { label: 'PF2E.Skill.Arcana' },
+        },
+      },
+    };
+    // The test i18n mock returns keys, so labels sort by key here.
+    expect(skillOptions()).toEqual([
+      { slug: 'perception', label: 'PF2E.PerceptionLabel' },
+      { slug: 'arcana', label: 'PF2E.Skill.Arcana' },
+      { slug: 'thievery', label: 'PF2E.Skill.Thievery' },
+    ]);
+  });
+
+  test('falls back to the core PF2e skills without CONFIG', () => {
+    const slugs = skillOptions().map((s) => s.slug);
+    expect(slugs).toContain('thievery');
+    expect(slugs).toContain('religion');
+    expect(slugs).toHaveLength(17);
+  });
 });

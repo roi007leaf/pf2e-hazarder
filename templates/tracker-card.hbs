@@ -3,10 +3,11 @@
     <span class="hz-header-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
     <span class="hz-header-name">{{name}}</span>
     <span class="hz-badge">{{statusLabel}}</span>
+    {{#if isGM}}<button type="button" class="hz-icon-btn hz-header-btn hz-gm" data-hz-action="hazard-sheet" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.OpenSheet'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.OpenSheet'}}"><i class="fa-solid fa-circle-info"></i></button>{{/if}}
   </header>
   {{#if actions}}
     <div class="hz-pool" data-tooltip="{{actions.remaining}} / {{actions.total}}">
-      {{#each actions.pips}}<span class="hz-action-pip {{#if spent}}spent{{/if}}"></span>{{/each}}
+      {{#each actions.pips}}<span class="hz-action-pip {{#if spent}}lost{{/if}}"></span>{{/each}}
     </div>
   {{/if}}
   {{#if empty}}<p class="hz-empty">{{localize "PF2E_HAZARDER.Tracker.NoDisables"}}</p>{{/if}}

@@ -17,6 +17,7 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       addDisable: PlanPanel.#addDisable,
       removeComponent: PlanPanel.#removeComponent,
       removeDisable: PlanPanel.#removeDisable,
+      openSheet: PlanPanel.#openSheet,
     },
   };
 
@@ -38,6 +39,30 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   get title() {
     return game.i18n.format('PF2E_HAZARDER.Plan.Title', { name: this.actor.name });
+  }
+
+  /** Visible title-bar button that opens the hazard's sheet. */
+  async _renderFrame(options) {
+    const frame = await super._renderFrame(options);
+    const header = frame.querySelector('.window-header');
+    const anchor =
+      header?.querySelector('[data-action="toggleControls"]') ??
+      header?.querySelector('[data-action="close"]');
+    if (anchor) {
+      const label = game.i18n.localize('PF2E_HAZARDER.Plan.OpenSheet');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'header-control icon fa-solid fa-circle-info';
+      button.dataset.action = 'openSheet';
+      button.dataset.tooltip = label;
+      button.setAttribute('aria-label', label);
+      anchor.before(button);
+    }
+    return frame;
+  }
+
+  static #openSheet() {
+    this.actor.sheet.render(true);
   }
 
   async _prepareContext() {

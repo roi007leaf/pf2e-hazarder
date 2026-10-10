@@ -22,6 +22,43 @@ export function nextId(prefix, items) {
   return `${prefix}${max + 1}`;
 }
 
+const CORE_SKILLS = [
+  'acrobatics',
+  'arcana',
+  'athletics',
+  'crafting',
+  'deception',
+  'diplomacy',
+  'intimidation',
+  'medicine',
+  'nature',
+  'occultism',
+  'performance',
+  'religion',
+  'society',
+  'stealth',
+  'survival',
+  'thievery',
+];
+
+const capitalise = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Skill choices for the disable-option skill field (free text stays allowed for Lores). */
+export function skillOptions() {
+  const configured = globalThis.CONFIG?.PF2E?.skills;
+  const options = configured
+    ? Object.entries(configured).map(([slug, v]) => ({
+        slug,
+        label: game.i18n.localize(v?.label ?? v ?? capitalise(slug)),
+      }))
+    : CORE_SKILLS.map((slug) => ({ slug, label: capitalise(slug) }));
+  options.push({
+    slug: 'perception',
+    label: configured ? game.i18n.localize('PF2E.PerceptionLabel') : 'Perception',
+  });
+  return options.sort((a, b) => a.label.localeCompare(b.label));
+}
+
 export function planToContext(plan, warnings, actor) {
   const items = [...(actor.items ?? [])]
     .filter((i) => i.type === 'action' || i.type === 'melee')
@@ -29,6 +66,7 @@ export function planToContext(plan, warnings, actor) {
   const routine = new Set(plan.routineItemIds ?? []);
   return {
     plan,
+    skills: skillOptions(),
     warnings: warnings.map((w) => `PF2E_HAZARDER.Warnings.${w}`),
     items,
     routineItems: items

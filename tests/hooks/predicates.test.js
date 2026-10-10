@@ -5,17 +5,38 @@ import {
   trackerNeedsBump,
 } from '../../scripts/hooks/predicates.js';
 
-const actor = (flags, isComplex = true) => ({
+const actor = (flags, isComplex = true, details = {}) => ({
   type: 'hazard',
   isComplex,
+  isToken: false,
   getFlag: (s, k) => flags[k],
+  toObject: () => ({
+    name: 'H',
+    system: {
+      details: {
+        isComplex,
+        routine: '(1 action) It acts.',
+        disable: '@Check[thievery|dc:20]',
+        reset: '',
+        ...details,
+      },
+    },
+    items: [],
+  }),
 });
 
-test('prompt only for complex hazards without confirmed plan', () => {
-  expect(shouldPromptForPlan(actor({}))).toBe(true);
-  expect(shouldPromptForPlan(actor({ plan: { version: 1, confirmed: false } }))).toBe(true);
+test('a clean draft is used without asking', () => {
+  expect(shouldPromptForPlan(actor({}))).toBe(false);
+});
+
+test('a draft with parser warnings asks the GM', () => {
+  expect(shouldPromptForPlan(actor({}, true, { routine: 'It acts somehow.' }))).toBe(true);
+  expect(shouldPromptForPlan(actor({}, true, { disable: 'Smash it.' }))).toBe(true);
+});
+
+test('never asks for confirmed plans, simple hazards or non-hazards', () => {
   expect(shouldPromptForPlan(actor({ plan: { version: 1, confirmed: true } }))).toBe(false);
-  expect(shouldPromptForPlan(actor({}, false))).toBe(false);
+  expect(shouldPromptForPlan(actor({}, false, { disable: 'Smash it.' }))).toBe(false);
   expect(shouldPromptForPlan({ type: 'npc', getFlag: () => null })).toBe(false);
 });
 

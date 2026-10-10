@@ -47,7 +47,8 @@
       "SaveForTargets": "Post this save for your targets (one action per target)",
       "PostAction": "Post to chat",
       "SaveForTargetsAction": "Post this save for your targets",
-      "ShowTracker": "Show disable tracker"
+      "ShowTracker": "Show disable tracker",
+      "OpenSheet": "Open hazard sheet"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",
@@ -71,7 +72,8 @@
       "RemoveDisable": "Remove disable option",
       "Counteract": "Counteract",
       "CounteractSpell": "Spell (blank = none)",
-      "CounteractRank": "Rank"
+      "CounteractRank": "Rank",
+      "OpenSheet": "Open hazard sheet"
     },
     "Warnings": {
       "actions-per-turn-missing": "Could not find \"(N actions)\" in the routine.",
