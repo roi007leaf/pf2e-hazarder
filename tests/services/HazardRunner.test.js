@@ -5,7 +5,15 @@ const plan = {
   version: 1,
   confirmed: true,
   actionsPerTurn: 2,
-  components: [{ id: 'c1', name: 'Rune', count: 1, actionsEach: 0, disables: [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 }] }],
+  components: [
+    {
+      id: 'c1',
+      name: 'Rune',
+      count: 1,
+      actionsEach: 0,
+      disables: [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 }],
+    },
+  ],
   reactionItemId: 'r1',
 };
 
@@ -38,7 +46,13 @@ const msg = (context, flags = {}) => ({
   speaker: { actor: 'a1' },
   setFlag: jest.fn(),
 });
-const ctx = (over = {}) => ({ type: 'skill-check', outcome: 'success', dc: { value: 22 }, options: ['check:statistic:thievery'], ...over });
+const ctx = (over = {}) => ({
+  type: 'skill-check',
+  outcome: 'success',
+  dc: { value: 22 },
+  options: ['check:statistic:thievery'],
+  ...over,
+});
 
 test('unique match applies, marks message, refreshes tracker', async () => {
   const { runner, tokenDoc, ui } = setup();
@@ -85,12 +99,20 @@ test('ambiguous stores candidates on the message', async () => {
 test('reroll flag is passed through', async () => {
   const { runner, tokenDoc } = setup();
   await runner.handleCheckMessage(msg(ctx({ outcome: 'failure' })));
-  await runner.handleCheckMessage({ ...msg(ctx({ outcome: 'success', isReroll: true })), id: 'm2' });
+  await runner.handleCheckMessage({
+    ...msg(ctx({ outcome: 'success', isReroll: true })),
+    id: 'm2',
+  });
   expect(tokenDoc.state.history.filter((h) => h.kind === 'result')).toHaveLength(1);
 });
 
 test('overridePip cycles progress', async () => {
-  const p2 = { ...plan, components: [{ ...plan.components[0], disables: [{ id: 'd1', skill: 'x', dc: 1, successesNeeded: 2 }] }] };
+  const p2 = {
+    ...plan,
+    components: [
+      { ...plan.components[0], disables: [{ id: 'd1', skill: 'x', dc: 1, successesNeeded: 2 }] },
+    ],
+  };
   const { runner, tokenDoc, store } = setup();
   store.getOrDraftPlan = () => ({ plan: p2, warnings: [], isDraft: false });
   tokenDoc.state = activate(createInitialState(p2));
@@ -137,7 +159,15 @@ describe('removeDisabledFromCombat', () => {
 });
 
 describe('fix round 1', () => {
-  const plan2 = { ...plan, components: [{ ...plan.components[0], disables: [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 2 }] }] };
+  const plan2 = {
+    ...plan,
+    components: [
+      {
+        ...plan.components[0],
+        disables: [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 2 }],
+      },
+    ],
+  };
 
   function setup2(p = plan2) {
     const s = setup();
@@ -147,7 +177,9 @@ describe('fix round 1', () => {
       t.state = st;
     });
     s.tokenDoc.state = activate(createInitialState(p));
-    s.runner.getCandidates = () => [{ tokenId: 't1', tokenDoc: s.tokenDoc, plan: p, state: s.tokenDoc.state }];
+    s.runner.getCandidates = () => [
+      { tokenId: 't1', tokenDoc: s.tokenDoc, plan: p, state: s.tokenDoc.state },
+    ];
     return s;
   }
 
@@ -164,7 +196,12 @@ describe('fix round 1', () => {
     await runner.handleCheckMessage(msg(ctx()));
     store.setState.mockClear();
     expect(tokenDoc.state.instances[0].disabled).toBe(true);
-    const res = await runner.apply(tokenDoc, { instanceKey: 'c1:0', disableId: 'd1', degree: 2, messageId: 'm9' });
+    const res = await runner.apply(tokenDoc, {
+      instanceKey: 'c1:0',
+      disableId: 'd1',
+      degree: 2,
+      messageId: 'm9',
+    });
     expect(res.every((e) => e.type === 'ignored')).toBe(true);
     expect(store.setState).not.toHaveBeenCalled();
   });

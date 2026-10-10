@@ -1,6 +1,11 @@
 import { MODULE_ID } from '../constants.js';
 import { buildTag } from '../services/RollMatcher.js';
-import { getOrCreateState, getOrDraftPlan, getTrackerMessageId, setTrackerMessageId } from '../stores/hazardStore.js';
+import {
+  getOrCreateState,
+  getOrDraftPlan,
+  getTrackerMessageId,
+  setTrackerMessageId,
+} from '../stores/hazardStore.js';
 import { buildTrackerView } from './trackerView.js';
 
 const TEMPLATE = `modules/${MODULE_ID}/templates/tracker-card.hbs`;
@@ -9,7 +14,10 @@ export async function renderTrackerContent(tokenDoc) {
   const { plan } = getOrDraftPlan(tokenDoc.actor);
   const state = getOrCreateState(tokenDoc, plan);
   const view = buildTrackerView({ name: tokenDoc.name, plan, state, isGM: game.user.isGM });
-  return foundry.applications.handlebars.renderTemplate(TEMPLATE, { ...view, tokenUuid: tokenDoc.uuid });
+  return foundry.applications.handlebars.renderTemplate(TEMPLATE, {
+    ...view,
+    tokenUuid: tokenDoc.uuid,
+  });
 }
 
 export async function upsertTracker(tokenDoc) {
@@ -33,7 +41,9 @@ export async function rollDisable({ tokenUuid, instanceKey, disableId }) {
   if (!tokenDoc?.actor) return;
   const { plan } = getOrDraftPlan(tokenDoc.actor);
   const [componentId, index] = instanceKey.split(':');
-  const disable = plan.components.find((c) => c.id === componentId)?.disables.find((d) => d.id === disableId);
+  const disable = plan.components
+    .find((c) => c.id === componentId)
+    ?.disables.find((d) => d.id === disableId);
   if (!disable) return;
   const roller = canvas.tokens?.controlled?.[0]?.actor ?? game.user.character;
   if (!roller) {

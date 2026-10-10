@@ -10,7 +10,9 @@ export function buildTurnView({ name, plan, state, routineHtml, items }) {
     total,
     remaining,
     pips: Array.from({ length: total }, (_, i) => ({ spent: i >= remaining })),
-    disabledNote: disabled ? game.i18n.format('PF2E_HAZARDER.Turn.DisabledNote', { count: disabled }) : null,
+    disabledNote: disabled
+      ? game.i18n.format('PF2E_HAZARDER.Turn.DisabledNote', { count: disabled })
+      : null,
     routineHtml,
     items: (plan.routineItemIds ?? []).map((id) => byId.get(id)).filter(Boolean),
   };

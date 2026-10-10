@@ -31,7 +31,12 @@ export function parseInlineChecks(html) {
       skill: params.type,
       dc: Number.isFinite(dc) ? dc : null,
       label: params.name || (m[2] ? m[2].trim() : '') || params.type,
-      traits: params.traits ? params.traits.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      traits: params.traits
+        ? params.traits
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
       index: m.index,
       end: m.index + m[0].length,
     });

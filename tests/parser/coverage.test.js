@@ -9,9 +9,13 @@ test('parser never throws on any installed hazard', () => {
 
 test('parse coverage on complex hazards', () => {
   const withActions = complex.filter((h) => draftPlan(h).plan.actionsPerTurn !== null);
-  const withDisables = complex.filter((h) => draftPlan(h).plan.components.some((c) => c.disables.length));
+  const withDisables = complex.filter((h) =>
+    draftPlan(h).plan.components.some((c) => c.disables.length),
+  );
   const missesA = complex.filter((h) => !withActions.includes(h)).map((h) => `${h.pack}/${h.name}`);
-  const missesD = complex.filter((h) => !withDisables.includes(h)).map((h) => `${h.pack}/${h.name}`);
+  const missesD = complex
+    .filter((h) => !withDisables.includes(h))
+    .map((h) => `${h.pack}/${h.name}`);
   console.log(
     `complex=${complex.length} actions=${withActions.length} disables=${withDisables.length}\n` +
       `no actions: ${missesA.join(', ')}\nno disables: ${missesD.join(', ')}`,

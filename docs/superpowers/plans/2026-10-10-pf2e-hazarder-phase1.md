@@ -74,15 +74,18 @@ pf2e-hazarder/
 ### Task 1: Scaffold the module
 
 **Files:**
+
 - Create: `module.json`, `package.json`, `babel.config.cjs`, `eslint.config.mjs`, `.prettierrc.json`, `.gitignore`, `.husky/pre-commit`, `lang/en.json`, `styles/hazarder.css`, `scripts/main.js`, `scripts/constants.js`, `scripts/systemCompat.js`, `scripts/settings.js`, `tests/setup.js`
 - Test: `tests/constants.test.js`
 
 **Interfaces:**
+
 - Produces: `MODULE_ID`, `PLAN_VERSION`, `STATE_VERSION`, `TAG_PREFIX`, `STATUS`, `DEGREE`, `OUTCOME_TO_DEGREE` from `scripts/constants.js`; `detectSystem()`, `getSystemId()`, `getSystemFlags(doc)` from `scripts/systemCompat.js`; `registerSettings()` and setting keys `publicFlavorCard` (Boolean, default false), `skipDisabledTurns` (Boolean, default true), `removeDisabledFromCombat` (Boolean, default false).
 
 - [ ] **Step 1: Write manifest and tooling files**
 
 `module.json`:
+
 ```json
 {
   "id": "pf2e-hazarder",
@@ -104,6 +107,7 @@ pf2e-hazarder/
 ```
 
 `package.json`:
+
 ```json
 {
   "name": "pf2e-hazarder",
@@ -143,11 +147,13 @@ pf2e-hazarder/
 ```
 
 `babel.config.cjs`:
+
 ```js
 module.exports = { presets: [['@babel/preset-env', { targets: { node: 'current' } }]] };
 ```
 
 `eslint.config.mjs`:
+
 ```js
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
@@ -181,6 +187,7 @@ export default [
 ```
 
 `.prettierrc.json`:
+
 ```json
 {
   "printWidth": 100,
@@ -195,6 +202,7 @@ export default [
 ```
 
 `.gitignore`:
+
 ```
 node_modules/
 coverage/
@@ -202,6 +210,7 @@ artifacts/
 ```
 
 `.husky/pre-commit`:
+
 ```
 npm run lint && npm test
 ```
@@ -209,6 +218,7 @@ npm run lint && npm test
 - [ ] **Step 2: Write the failing test**
 
 `tests/setup.js`:
+
 ```js
 global.game = {
   i18n: { lang: 'en', localize: (k) => k, format: (k) => k },
@@ -222,15 +232,20 @@ global.ui = { notifications: { info: jest.fn(), warn: jest.fn(), error: jest.fn(
 ```
 
 `tests/constants.test.js`:
+
 ```js
 import { DEGREE, OUTCOME_TO_DEGREE, STATUS, TAG_PREFIX, MODULE_ID } from '../scripts/constants.js';
 
 test('constants match the spec', () => {
   expect(MODULE_ID).toBe('pf2e-hazarder');
   expect(TAG_PREFIX).toBe('hazarder:instance:');
-  expect(Object.values(STATUS).sort()).toEqual(
-    ['active', 'armed', 'disabled', 'reset', 'triggered'],
-  );
+  expect(Object.values(STATUS).sort()).toEqual([
+    'active',
+    'armed',
+    'disabled',
+    'reset',
+    'triggered',
+  ]);
   expect(OUTCOME_TO_DEGREE.criticalSuccess).toBe(DEGREE.CRIT_SUCCESS);
   expect(OUTCOME_TO_DEGREE.criticalFailure).toBe(DEGREE.CRIT_FAIL);
 });
@@ -244,6 +259,7 @@ Expected: FAIL with "Cannot find module '../scripts/constants.js'"
 - [ ] **Step 4: Write implementation**
 
 `scripts/constants.js`:
+
 ```js
 export const MODULE_ID = 'pf2e-hazarder';
 export const PLAN_VERSION = 1;
@@ -269,6 +285,7 @@ export const OUTCOME_TO_DEGREE = Object.freeze({
 ```
 
 `scripts/systemCompat.js`:
+
 ```js
 let systemId = null;
 
@@ -286,6 +303,7 @@ export function getSystemFlags(doc) {
 ```
 
 `scripts/settings.js`:
+
 ```js
 import { MODULE_ID } from './constants.js';
 
@@ -313,6 +331,7 @@ export function registerSettings() {
 ```
 
 `scripts/main.js` (filled in by later tasks; start minimal):
+
 ```js
 import { MODULE_ID } from './constants.js';
 import { detectSystem } from './systemCompat.js';
@@ -326,15 +345,31 @@ Hooks.once('init', () => {
 ```
 
 `lang/en.json` (all keys used anywhere in this plan; later tasks reference these exact keys):
+
 ```json
 {
   "PF2E_HAZARDER": {
     "Settings": {
-      "PublicFlavorCard": { "Name": "Public hazard turn card", "Hint": "Also post a short public card when a hazard takes its turn." },
-      "SkipDisabledTurns": { "Name": "Skip disabled hazards", "Hint": "Automatically advance past a disabled hazard's turn." },
-      "RemoveDisabled": { "Name": "Remove disabled hazards from combat", "Hint": "Remove a hazard's combatant once every component is disabled." }
+      "PublicFlavorCard": {
+        "Name": "Public hazard turn card",
+        "Hint": "Also post a short public card when a hazard takes its turn."
+      },
+      "SkipDisabledTurns": {
+        "Name": "Skip disabled hazards",
+        "Hint": "Automatically advance past a disabled hazard's turn."
+      },
+      "RemoveDisabled": {
+        "Name": "Remove disabled hazards from combat",
+        "Hint": "Remove a hazard's combatant once every component is disabled."
+      }
     },
-    "Status": { "armed": "Armed", "triggered": "Triggered", "active": "Active", "disabled": "Disabled", "reset": "Reset" },
+    "Status": {
+      "armed": "Armed",
+      "triggered": "Triggered",
+      "active": "Active",
+      "disabled": "Disabled",
+      "reset": "Reset"
+    },
     "Tracker": {
       "Title": "{name}: Disable",
       "NoDisables": "No disable options — edit the plan",
@@ -344,7 +379,12 @@ Hooks.once('init', () => {
       "EditPlan": "Edit plan",
       "NoActor": "Select your token first."
     },
-    "Turn": { "Title": "{name}'s turn", "Actions": "Actions: {remaining} / {total}", "DisabledNote": "{count} disabled", "Flavor": "{name} acts!" },
+    "Turn": {
+      "Title": "{name}'s turn",
+      "Actions": "Actions: {remaining} / {total}",
+      "DisabledNote": "{count} disabled",
+      "Flavor": "{name} acts!"
+    },
     "Plan": {
       "Title": "Hazard plan: {name}",
       "Review": "{name} has no confirmed plan. Review it now?",
@@ -369,22 +409,53 @@ Hooks.once('init', () => {
       "parse-error": "The parser failed; fill the plan in by hand."
     },
     "Match": { "ApplyTo": "Apply to hazard…", "Applied": "Applied to {name}" },
-    "Triggered": { "Title": "{name} triggered!", "Body": "A critical failure triggered the hazard. Post its reaction?", "Fire": "Post reaction" },
+    "Triggered": {
+      "Title": "{name} triggered!",
+      "Body": "A critical failure triggered the hazard. Post its reaction?",
+      "Fire": "Post reaction"
+    },
     "Disabled": "{name} is disabled."
   }
 }
 ```
 
 `styles/hazarder.css`:
+
 ```css
-.hazarder-card .hz-component { margin: 4px 0; }
-.hazarder-card .hz-instance { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-.hazarder-card .hz-instance.disabled { opacity: 0.5; text-decoration: line-through; }
-.hazarder-card .hz-pip { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid currentColor; }
-.hazarder-card .hz-pip.filled { background: currentColor; }
-.hazarder-card .hz-actions .hz-pip.spent { opacity: 0.25; }
-.hazarder-card button { flex: 0 0 auto; width: auto; line-height: 1.4; }
-.hazarder-plan .hz-warning { color: var(--color-level-warning, #c90); }
+.hazarder-card .hz-component {
+  margin: 4px 0;
+}
+.hazarder-card .hz-instance {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.hazarder-card .hz-instance.disabled {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.hazarder-card .hz-pip {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+}
+.hazarder-card .hz-pip.filled {
+  background: currentColor;
+}
+.hazarder-card .hz-actions .hz-pip.spent {
+  opacity: 0.25;
+}
+.hazarder-card button {
+  flex: 0 0 auto;
+  width: auto;
+  line-height: 1.4;
+}
+.hazarder-plan .hz-warning {
+  color: var(--color-level-warning, #c90);
+}
 ```
 
 - [ ] **Step 5: Run test to verify it passes**
@@ -404,18 +475,21 @@ git commit -m "chore: scaffold pf2e-hazarder module"
 ### Task 2: Inline-roll parsing helpers
 
 **Files:**
+
 - Create: `scripts/parser/inline.js`
 - Test: `tests/parser/inline.test.js`
 
 **Interfaces:**
+
 - Produces:
   - `stripHtml(html: string) => string` — tags removed, whitespace collapsed, trimmed; `''` for nullish.
-  - `parseInlineChecks(html: string) => Array<{ skill: string, dc: number|null, label: string, traits: string[], index: number, end: number }>` — `index`/`end` are character offsets of the match in the *raw* html.
+  - `parseInlineChecks(html: string) => Array<{ skill: string, dc: number|null, label: string, traits: string[], index: number, end: number }>` — `index`/`end` are character offsets of the match in the _raw_ html.
   - `parseCounteracts(html: string) => Array<{ spellUuid: string, name: string, rank: number|null, dc: number|null }>`
 
 - [ ] **Step 1: Write the failing test**
 
 `tests/parser/inline.test.js`:
+
 ```js
 import { parseCounteracts, parseInlineChecks, stripHtml } from '../../scripts/parser/inline.js';
 
@@ -443,7 +517,12 @@ describe('parseInlineChecks', () => {
   test('supports type: key, brace label and comma traits', () => {
     const html = '@Check[type:religion|dc:35|traits:haunt,mechanical]{Religion (expert)}';
     const [c] = parseInlineChecks(html);
-    expect(c).toMatchObject({ skill: 'religion', dc: 35, label: 'Religion (expert)', traits: ['haunt', 'mechanical'] });
+    expect(c).toMatchObject({
+      skill: 'religion',
+      dc: 35,
+      label: 'Religion (expert)',
+      traits: ['haunt', 'mechanical'],
+    });
   });
   test('falls back to skill as label and null dc', () => {
     const [c] = parseInlineChecks('@Check[survival]');
@@ -464,11 +543,20 @@ describe('parseCounteracts', () => {
     const html =
       '@UUID[Compendium.pf2e.spells-srd.Item.9HpwDN4MYQJnW0LG]{Dispel Magic} (6th rank; counteract DC 30) to counteract';
     expect(parseCounteracts(html)).toEqual([
-      { spellUuid: 'Compendium.pf2e.spells-srd.Item.9HpwDN4MYQJnW0LG', name: 'Dispel Magic', rank: 6, dc: 30 },
+      {
+        spellUuid: 'Compendium.pf2e.spells-srd.Item.9HpwDN4MYQJnW0LG',
+        name: 'Dispel Magic',
+        rank: 6,
+        dc: 30,
+      },
     ]);
   });
   test('ignores non-spell uuids', () => {
-    expect(parseCounteracts('@UUID[Compendium.pf2e.equipment-srd.Item.x]{Rope} (1st rank; counteract DC 1)')).toEqual([]);
+    expect(
+      parseCounteracts(
+        '@UUID[Compendium.pf2e.equipment-srd.Item.x]{Rope} (1st rank; counteract DC 1)',
+      ),
+    ).toEqual([]);
   });
 });
 ```
@@ -481,6 +569,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/parser/inline.js`:
+
 ```js
 const CHECK_RE = /@Check\[([^\]]+)\](?:\{([^}]*)\})?/g;
 const COUNTERACT_RE = /@UUID\[(Compendium\.[^\]]*spells[^\]]*)\]\{([^}]*)\}\s*\(([^)]*)\)/g;
@@ -515,7 +604,12 @@ export function parseInlineChecks(html) {
       skill: params.type,
       dc: Number.isFinite(dc) ? dc : null,
       label: params.name || (m[2] ? m[2].trim() : '') || params.type,
-      traits: params.traits ? params.traits.split(',').map((t) => t.trim()).filter(Boolean) : [],
+      traits: params.traits
+        ? params.traits
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
       index: m.index,
       end: m.index + m[0].length,
     });
@@ -557,12 +651,15 @@ git commit -m "feat(parser): parse inline checks and counteract links"
 ### Task 3: Draft plan parser + real-data fixtures
 
 **Files:**
+
 - Create: `scripts/parser/draftPlan.js`, `tools/extract-hazard-fixtures.mjs`, `tests/fixtures/hazards.json` (generated)
 - Test: `tests/parser/draftPlan.test.js`, `tests/parser/coverage.test.js`
 
 **Interfaces:**
+
 - Consumes: `stripHtml`, `parseInlineChecks`, `parseCounteracts` (Task 2); `PLAN_VERSION` (Task 1).
 - Produces: `draftPlan(source) => { plan: Plan, warnings: string[] }` where `source` is an actor source object `{ name, system: { details: { isComplex, routine, disable, reset } }, items: [{ _id, type, name, system: { actionType: { value } } }] }` and `Plan` is:
+
   ```
   { version: 1, confirmed: false, actionsPerTurn: number|null,
     components: [{ id, name, count, actionsEach,
@@ -570,18 +667,21 @@ git commit -m "feat(parser): parse inline checks and counteract links"
       counteract: { spellUuid, name, rank, dc } | null }],
     reactionItemId: string|null, routineItemIds: string[], resetText: string, resetAfterSeconds: null }
   ```
+
   Warning codes exactly: `actions-per-turn-missing`, `no-disables`, `successes-heuristic`, `component-count-unknown`, `parse-error`.
 
 - [ ] **Step 1: Write the fixture extractor**
 
 `tools/extract-hazard-fixtures.mjs` (reads every installed pf2e pack, keeps hazard actors, writes minimal fields; set `FOUNDRY_APP` if Foundry is installed elsewhere):
+
 ```js
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const FOUNDRY_APP = process.env.FOUNDRY_APP ?? 'C:/Program Files/Foundry Virtual Tabletop/resources/app';
+const FOUNDRY_APP =
+  process.env.FOUNDRY_APP ?? 'C:/Program Files/Foundry Virtual Tabletop/resources/app';
 const PACKS = process.env.PF2E_PACKS ?? path.resolve('../../systems/pf2e/packs');
 const require = createRequire(import.meta.url);
 const { ClassicLevel } = require(path.join(FOUNDRY_APP, 'node_modules/classic-level'));
@@ -632,7 +732,9 @@ for (const pack of fs.readdirSync(PACKS)) {
 }
 fs.mkdirSync('tests/fixtures', { recursive: true });
 fs.writeFileSync('tests/fixtures/hazards.json', JSON.stringify(out, null, 1));
-console.log(`wrote ${out.length} hazards (${out.filter((h) => h.system.details.isComplex).length} complex)`);
+console.log(
+  `wrote ${out.length} hazards (${out.filter((h) => h.system.details.isComplex).length} complex)`,
+);
 ```
 
 Run: `npm run fixtures`
@@ -641,6 +743,7 @@ Expected: `wrote N hazards (M complex)` with N ≥ 53 and M ≥ 16. Commit the J
 - [ ] **Step 2: Write the failing unit tests**
 
 `tests/parser/draftPlan.test.js`:
+
 ```js
 import { draftPlan } from '../../scripts/parser/draftPlan.js';
 
@@ -651,7 +754,9 @@ const hazard = (details, items = [], name = 'Test Hazard') => ({
 });
 
 test('actions per turn from routine', () => {
-  const { plan, warnings } = draftPlan(hazard({ routine: '<p>(2 actions) On its initiative…</p>' }));
+  const { plan, warnings } = draftPlan(
+    hazard({ routine: '<p>(2 actions) On its initiative…</p>' }),
+  );
   expect(plan.actionsPerTurn).toBe(2);
   expect(warnings).not.toContain('actions-per-turn-missing');
 });
@@ -663,7 +768,9 @@ test('missing actions count on complex hazard warns', () => {
 });
 
 test('simple hazard has null actions and no actions warning', () => {
-  const { plan, warnings } = draftPlan(hazard({ isComplex: false, disable: '@Check[thievery|dc:18]' }));
+  const { plan, warnings } = draftPlan(
+    hazard({ isComplex: false, disable: '@Check[thievery|dc:18]' }),
+  );
   expect(plan.actionsPerTurn).toBeNull();
   expect(warnings).not.toContain('actions-per-turn-missing');
 });
@@ -672,12 +779,20 @@ test('disables come from inline checks on one implicit component', () => {
   const { plan } = draftPlan(
     hazard({
       routine: '(1 action)',
-      disable: '@Check[thievery|dc:26|name:Stop Wheel] (expert) or @Check[thievery|dc:22|name:Erase Rune] (master)',
+      disable:
+        '@Check[thievery|dc:26|name:Stop Wheel] (expert) or @Check[thievery|dc:22|name:Erase Rune] (master)',
     }),
   );
   expect(plan.components).toHaveLength(1);
-  expect(plan.components[0]).toMatchObject({ id: 'c1', name: 'Test Hazard', count: 1, actionsEach: 0 });
-  expect(plan.components[0].disables.map((d) => [d.id, d.skill, d.dc, d.label, d.successesNeeded])).toEqual([
+  expect(plan.components[0]).toMatchObject({
+    id: 'c1',
+    name: 'Test Hazard',
+    count: 1,
+    actionsEach: 0,
+  });
+  expect(
+    plan.components[0].disables.map((d) => [d.id, d.skill, d.dc, d.label, d.successesNeeded]),
+  ).toEqual([
     ['d1', 'thievery', 26, 'Stop Wheel', 1],
     ['d2', 'thievery', 22, 'Erase Rune', 1],
   ]);
@@ -685,7 +800,10 @@ test('disables come from inline checks on one implicit component', () => {
 
 test('"twice" after a check sets successesNeeded 2 with a warning', () => {
   const { plan, warnings } = draftPlan(
-    hazard({ routine: '(9 actions)', disable: '@Check[religion|dc:35]{Religion (expert)} twice to exorcise' }),
+    hazard({
+      routine: '(9 actions)',
+      disable: '@Check[religion|dc:35]{Religion (expert)} twice to exorcise',
+    }),
   );
   expect(plan.components[0].disables[0].successesNeeded).toBe(2);
   expect(warnings).toContain('successes-heuristic');
@@ -693,7 +811,10 @@ test('"twice" after a check sets successesNeeded 2 with a warning', () => {
 
 test('"twice" belonging to a later check does not leak backwards', () => {
   const { plan } = draftPlan(
-    hazard({ routine: '(1 action)', disable: '@Check[thievery|dc:37] to jam, or @Check[religion|dc:35] twice' }),
+    hazard({
+      routine: '(1 action)',
+      disable: '@Check[thievery|dc:37] to jam, or @Check[religion|dc:35] twice',
+    }),
   );
   expect(plan.components[0].disables.map((d) => d.successesNeeded)).toEqual([1, 2]);
 });
@@ -745,8 +866,15 @@ test('reaction and routine items', () => {
 });
 
 test('defaults and reset text', () => {
-  const { plan } = draftPlan(hazard({ routine: '(1 action)', reset: '<p>Resets after 1 minute.</p>' }));
-  expect(plan).toMatchObject({ version: 1, confirmed: false, resetText: 'Resets after 1 minute.', resetAfterSeconds: null });
+  const { plan } = draftPlan(
+    hazard({ routine: '(1 action)', reset: '<p>Resets after 1 minute.</p>' }),
+  );
+  expect(plan).toMatchObject({
+    version: 1,
+    confirmed: false,
+    resetText: 'Resets after 1 minute.',
+    resetAfterSeconds: null,
+  });
 });
 
 test('never throws on garbage', () => {
@@ -757,6 +885,7 @@ test('never throws on garbage', () => {
 ```
 
 `tests/parser/coverage.test.js`:
+
 ```js
 import hazards from '../fixtures/hazards.json';
 import { draftPlan } from '../../scripts/parser/draftPlan.js';
@@ -769,9 +898,13 @@ test('parser never throws on any installed hazard', () => {
 
 test('parse coverage on complex hazards', () => {
   const withActions = complex.filter((h) => draftPlan(h).plan.actionsPerTurn !== null);
-  const withDisables = complex.filter((h) => draftPlan(h).plan.components.some((c) => c.disables.length));
+  const withDisables = complex.filter((h) =>
+    draftPlan(h).plan.components.some((c) => c.disables.length),
+  );
   const missesA = complex.filter((h) => !withActions.includes(h)).map((h) => `${h.pack}/${h.name}`);
-  const missesD = complex.filter((h) => !withDisables.includes(h)).map((h) => `${h.pack}/${h.name}`);
+  const missesD = complex
+    .filter((h) => !withDisables.includes(h))
+    .map((h) => `${h.pack}/${h.name}`);
   console.log(
     `complex=${complex.length} actions=${withActions.length} disables=${withDisables.length}\n` +
       `no actions: ${missesA.join(', ')}\nno disables: ${missesD.join(', ')}`,
@@ -789,6 +922,7 @@ Expected: FAIL with "Cannot find module '../../scripts/parser/draftPlan.js'"
 - [ ] **Step 4: Write implementation**
 
 `scripts/parser/draftPlan.js`:
+
 ```js
 import { PLAN_VERSION } from '../constants.js';
 import { parseCounteracts, parseInlineChecks, stripHtml } from './inline.js';
@@ -821,7 +955,9 @@ function successesAfter(rawDisable, check, nextIndex) {
 }
 
 function parseComponent(routineText) {
-  const each = /uses\s+(\d+|one|two|three|four|five|six)\s+of\s+the\s+[\w'’ ]*?actions/i.exec(routineText);
+  const each = /uses\s+(\d+|one|two|three|four|five|six)\s+of\s+the\s+[\w'’ ]*?actions/i.exec(
+    routineText,
+  );
   const noun =
     /every\s+disabled(?:\s+or\s+destroyed)?\s+(\w+)/i.exec(routineText) ??
     /each\s+(?:of\s+the\s+)?(\w+?)s?\s+uses/i.exec(routineText);
@@ -903,10 +1039,12 @@ git commit -m "feat(parser): draft hazard plans from routine/disable text with r
 ### Task 4: Rules engine
 
 **Files:**
+
 - Create: `scripts/services/RulesEngine.js`
 - Test: `tests/services/RulesEngine.test.js`
 
 **Interfaces:**
+
 - Consumes: `STATUS`, `DEGREE`, `STATE_VERSION` (Task 1); `Plan` shape (Task 3).
 - Produces (all pure; never mutate inputs; return new objects):
   - `instanceKey(componentId: string, index: number) => string` → `"c1:0"`
@@ -923,6 +1061,7 @@ git commit -m "feat(parser): draft hazard plans from routine/disable text with r
 - [ ] **Step 1: Write the failing tests**
 
 `tests/services/RulesEngine.test.js`:
+
 ```js
 import {
   actionsRemaining,
@@ -969,7 +1108,12 @@ test('initial state', () => {
   const s = createInitialState(plan);
   expect(s.status).toBe('armed');
   expect(s.instances).toHaveLength(3);
-  expect(s.instances[0]).toEqual({ componentId: 'c1', index: 0, progress: { d1: 0, d2: 0 }, disabled: false });
+  expect(s.instances[0]).toEqual({
+    componentId: 'c1',
+    index: 0,
+    progress: { d1: 0, d2: 0 },
+    disabled: false,
+  });
   expect(instanceKey('c1', 2)).toBe('c1:2');
 });
 
@@ -985,7 +1129,11 @@ test('success adds one, crit success adds two and disables', () => {
 });
 
 test('clamps progress at successesNeeded', () => {
-  const { state } = applyResult(createInitialState(plan), plan, r({ disableId: 'd1', degree: DEGREE.CRIT_SUCCESS }));
+  const { state } = applyResult(
+    createInitialState(plan),
+    plan,
+    r({ disableId: 'd1', degree: DEGREE.CRIT_SUCCESS }),
+  );
   expect(state.instances[0].progress.d1).toBe(1);
 });
 
@@ -996,13 +1144,21 @@ test('failure changes nothing', () => {
 });
 
 test('crit failure triggers an armed hazard', () => {
-  const { state, events } = applyResult(createInitialState(plan), plan, r({ degree: DEGREE.CRIT_FAIL }));
+  const { state, events } = applyResult(
+    createInitialState(plan),
+    plan,
+    r({ degree: DEGREE.CRIT_FAIL }),
+  );
   expect(state.status).toBe('triggered');
   expect(events.map((e) => e.type)).toContain('hazardTriggered');
 });
 
 test('crit failure on an active hazard keeps it active but emits trigger', () => {
-  const { state, events } = applyResult(activate(createInitialState(plan)), plan, r({ degree: DEGREE.CRIT_FAIL }));
+  const { state, events } = applyResult(
+    activate(createInitialState(plan)),
+    plan,
+    r({ degree: DEGREE.CRIT_FAIL }),
+  );
   expect(state.status).toBe('active');
   expect(events.map((e) => e.type)).toContain('hazardTriggered');
 });
@@ -1010,14 +1166,21 @@ test('crit failure on an active hazard keeps it active but emits trigger', () =>
 test('ignores disabled instance', () => {
   let { state } = applyResult(createInitialState(plan), plan, r({ disableId: 'd1' }));
   const res = applyResult(state, plan, r({ disableId: 'd2', messageId: 'm9' }));
-  expect(res.events).toEqual([{ type: 'ignored', reason: 'instance-disabled', instanceKey: 'c1:0' }]);
+  expect(res.events).toEqual([
+    { type: 'ignored', reason: 'instance-disabled', instanceKey: 'c1:0' },
+  ]);
   expect(res.state).toEqual(state);
 });
 
 test('all instances disabled disables hazard', () => {
   let s = activate(createInitialState(plan));
   let events = [];
-  for (const i of [0, 1, 2]) ({ state: s, events } = applyResult(s, plan, r({ instanceKey: `c1:${i}`, disableId: 'd1', messageId: `m${i}` })));
+  for (const i of [0, 1, 2])
+    ({ state: s, events } = applyResult(
+      s,
+      plan,
+      r({ instanceKey: `c1:${i}`, disableId: 'd1', messageId: `m${i}` }),
+    ));
   expect(s.status).toBe('disabled');
   expect(events.map((e) => e.type)).toContain('hazardDisabled');
   expect(disabledCount(s)).toBe(3);
@@ -1025,13 +1188,19 @@ test('all instances disabled disables hazard', () => {
 
 test('reroll replaces previous result from same actor on same instance', () => {
   let { state } = applyResult(createInitialState(plan), plan, r({ degree: DEGREE.SUCCESS }));
-  ({ state } = applyResult(state, plan, r({ degree: DEGREE.FAIL, isReroll: true, messageId: 'm2' })));
+  ({ state } = applyResult(
+    state,
+    plan,
+    r({ degree: DEGREE.FAIL, isReroll: true, messageId: 'm2' }),
+  ));
   expect(state.instances[0].progress.d2).toBe(0);
   expect(state.history.filter((h) => h.kind === 'result')).toHaveLength(1);
 });
 
 test('undo reverts the last result including disabled flag and status', () => {
-  let s = activate(createInitialState({ ...plan, components: [{ ...plan.components[0], count: 1 }] }));
+  let s = activate(
+    createInitialState({ ...plan, components: [{ ...plan.components[0], count: 1 }] }),
+  );
   const p1 = { ...plan, components: [{ ...plan.components[0], count: 1 }] };
   ({ state: s } = applyResult(s, p1, r({ disableId: 'd1' })));
   expect(s.status).toBe('disabled');
@@ -1041,7 +1210,11 @@ test('undo reverts the last result including disabled flag and status', () => {
 });
 
 test('override sets progress and disabled with undo support', () => {
-  let { state } = override(createInitialState(plan), plan, { instanceKey: 'c1:1', disableId: 'd2', progress: 1 });
+  let { state } = override(createInitialState(plan), plan, {
+    instanceKey: 'c1:1',
+    disableId: 'd2',
+    progress: 1,
+  });
   expect(state.instances[1].progress.d2).toBe(1);
   ({ state } = override(state, plan, { instanceKey: 'c1:1', disabled: true }));
   expect(state.instances[1].disabled).toBe(true);
@@ -1065,7 +1238,16 @@ test('syncStateToPlan keeps progress on surviving instances', () => {
   const synced = syncStateToPlan(state, smaller);
   expect(synced.instances).toHaveLength(2);
   expect(synced.instances[0].progress.d2).toBe(1);
-  const bigger = { ...plan, components: [{ ...plan.components[0], count: 4, disables: [...plan.components[0].disables, { id: 'd3', successesNeeded: 1 }] }] };
+  const bigger = {
+    ...plan,
+    components: [
+      {
+        ...plan.components[0],
+        count: 4,
+        disables: [...plan.components[0].disables, { id: 'd3', successesNeeded: 1 }],
+      },
+    ],
+  };
   const grown = syncStateToPlan(state, bigger);
   expect(grown.instances).toHaveLength(4);
   expect(grown.instances[0].progress).toEqual({ d1: 0, d2: 1, d3: 0 });
@@ -1094,6 +1276,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/services/RulesEngine.js`:
+
 ```js
 import { DEGREE, STATE_VERSION, STATUS } from '../constants.js';
 
@@ -1116,7 +1299,12 @@ function buildInstances(plan) {
 }
 
 export function createInitialState(plan) {
-  return { version: STATE_VERSION, status: STATUS.ARMED, instances: buildInstances(plan), history: [] };
+  return {
+    version: STATE_VERSION,
+    status: STATUS.ARMED,
+    instances: buildInstances(plan),
+    history: [],
+  };
 }
 
 export function syncStateToPlan(state, plan) {
@@ -1146,7 +1334,8 @@ function allDisabled(state) {
 function revertEntry(state, entry) {
   const inst = state.instances.find((i) => keyOf(i) === entry.instanceKey);
   if (inst) {
-    if (entry.disableId && entry.prevProgress !== undefined) inst.progress[entry.disableId] = entry.prevProgress;
+    if (entry.disableId && entry.prevProgress !== undefined)
+      inst.progress[entry.disableId] = entry.prevProgress;
     inst.disabled = entry.prevDisabled;
   }
   state.status = entry.prevStatus;
@@ -1164,12 +1353,23 @@ export function applyResult(state, plan, r) {
     }
   }
   const inst = next.instances.find((i) => keyOf(i) === r.instanceKey);
-  if (!inst) return { state, events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: r.instanceKey }] };
+  if (!inst)
+    return {
+      state,
+      events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: r.instanceKey }],
+    };
   if (inst.disabled) {
-    return { state: r.isReroll ? next : state, events: [{ type: 'ignored', reason: 'instance-disabled', instanceKey: r.instanceKey }] };
+    return {
+      state: r.isReroll ? next : state,
+      events: [{ type: 'ignored', reason: 'instance-disabled', instanceKey: r.instanceKey }],
+    };
   }
   const disable = findComponent(plan, inst.componentId)?.disables.find((d) => d.id === r.disableId);
-  if (!disable) return { state, events: [{ type: 'ignored', reason: 'unknown-disable', instanceKey: r.instanceKey }] };
+  if (!disable)
+    return {
+      state,
+      events: [{ type: 'ignored', reason: 'unknown-disable', instanceKey: r.instanceKey }],
+    };
 
   const entry = {
     kind: 'result',
@@ -1185,13 +1385,19 @@ export function applyResult(state, plan, r) {
   };
   const events = [];
   if (r.degree === DEGREE.CRIT_FAIL) {
-    if (next.status === STATUS.ARMED || next.status === STATUS.RESET) next.status = STATUS.TRIGGERED;
+    if (next.status === STATUS.ARMED || next.status === STATUS.RESET)
+      next.status = STATUS.TRIGGERED;
     events.push({ type: 'hazardTriggered', instanceKey: r.instanceKey });
   } else {
     const delta = r.degree === DEGREE.CRIT_SUCCESS ? 2 : r.degree === DEGREE.SUCCESS ? 1 : 0;
     const need = disable.successesNeeded ?? 1;
     inst.progress[r.disableId] = Math.min(need, (inst.progress[r.disableId] ?? 0) + delta);
-    events.push({ type: 'progress', instanceKey: r.instanceKey, disableId: r.disableId, value: inst.progress[r.disableId] });
+    events.push({
+      type: 'progress',
+      instanceKey: r.instanceKey,
+      disableId: r.disableId,
+      value: inst.progress[r.disableId],
+    });
     if (inst.progress[r.disableId] >= need) {
       inst.disabled = true;
       events.push({ type: 'instanceDisabled', instanceKey: r.instanceKey });
@@ -1208,7 +1414,8 @@ export function applyResult(state, plan, r) {
 export function override(state, plan, { instanceKey: key, disableId, progress, disabled }) {
   const next = clone(state);
   const inst = next.instances.find((i) => keyOf(i) === key);
-  if (!inst) return { state, events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: key }] };
+  if (!inst)
+    return { state, events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: key }] };
   const entry = {
     kind: 'override',
     instanceKey: key,
@@ -1272,10 +1479,12 @@ git commit -m "feat(engine): pure hazard state transitions with reroll, undo and
 ### Task 5: Roll matcher
 
 **Files:**
+
 - Create: `scripts/services/RollMatcher.js`
 - Test: `tests/services/RollMatcher.test.js`
 
 **Interfaces:**
+
 - Consumes: `TAG_PREFIX`, `STATUS` (Task 1); `instanceKey` (Task 4).
 - Produces:
   - `buildTag(tokenId, componentId, index, disableId) => string`
@@ -1286,12 +1495,24 @@ git commit -m "feat(engine): pure hazard state transitions with reroll, undo and
 - [ ] **Step 1: Write the failing tests**
 
 `tests/services/RollMatcher.test.js`:
+
 ```js
-import { buildTag, extractCheck, matchCheck, parseTag } from '../../scripts/services/RollMatcher.js';
+import {
+  buildTag,
+  extractCheck,
+  matchCheck,
+  parseTag,
+} from '../../scripts/services/RollMatcher.js';
 import { createInitialState } from '../../scripts/services/RulesEngine.js';
 
-const planOf = (count, disables) => ({ components: [{ id: 'c1', count, actionsEach: 0, disables }] });
-const cand = (tokenId, plan, status = 'active') => ({ tokenId, plan, state: { ...createInitialState(plan), status } });
+const planOf = (count, disables) => ({
+  components: [{ id: 'c1', count, actionsEach: 0, disables }],
+});
+const cand = (tokenId, plan, status = 'active') => ({
+  tokenId,
+  plan,
+  state: { ...createInitialState(plan), status },
+});
 const thieveryPlan = planOf(1, [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 }]);
 
 test('tag round-trips', () => {
@@ -1302,7 +1523,10 @@ test('tag round-trips', () => {
 });
 
 test('extractCheck reads statistic and dc', () => {
-  const ctx = { dc: { value: 22 }, options: ['check:statistic:base:thievery', 'check:statistic:thievery'] };
+  const ctx = {
+    dc: { value: 22 },
+    options: ['check:statistic:base:thievery', 'check:statistic:thievery'],
+  };
   expect(extractCheck(ctx)).toEqual({ statistic: 'thievery', dc: 22, options: ctx.options });
   expect(extractCheck({})).toEqual({ statistic: null, dc: null, options: [] });
 });
@@ -1316,7 +1540,9 @@ test('tagged wins', () => {
 });
 
 test('unique skill + dc match', () => {
-  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [cand('t1', thieveryPlan)]);
+  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [
+    cand('t1', thieveryPlan),
+  ]);
   expect(res.kind).toBe('unique');
   expect(res.matches).toEqual([{ tokenId: 't1', instanceKey: 'c1:0', disableId: 'd1' }]);
 });
@@ -1329,7 +1555,10 @@ test('multi-instance component is ambiguous', () => {
 });
 
 test('two hazards same check is ambiguous', () => {
-  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [cand('t1', thieveryPlan), cand('t2', thieveryPlan)]);
+  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [
+    cand('t1', thieveryPlan),
+    cand('t2', thieveryPlan),
+  ]);
   expect(res.kind).toBe('ambiguous');
 });
 
@@ -1338,13 +1567,23 @@ test('disabled hazards and disabled instances are skipped', () => {
   const c = cand('t1', plan);
   c.state.instances[0].disabled = true;
   expect(matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [c]).kind).toBe('unique');
-  expect(matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [cand('t1', thieveryPlan, 'disabled')]).kind).toBe('none');
+  expect(
+    matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [
+      cand('t1', thieveryPlan, 'disabled'),
+    ]).kind,
+  ).toBe('none');
 });
 
 test('wrong dc, missing statistic or missing dc is none', () => {
-  expect(matchCheck({ statistic: 'thievery', dc: 23, options: [] }, [cand('t1', thieveryPlan)]).kind).toBe('none');
-  expect(matchCheck({ statistic: null, dc: 22, options: [] }, [cand('t1', thieveryPlan)]).kind).toBe('none');
-  expect(matchCheck({ statistic: 'thievery', dc: null, options: [] }, [cand('t1', thieveryPlan)]).kind).toBe('none');
+  expect(
+    matchCheck({ statistic: 'thievery', dc: 23, options: [] }, [cand('t1', thieveryPlan)]).kind,
+  ).toBe('none');
+  expect(
+    matchCheck({ statistic: null, dc: 22, options: [] }, [cand('t1', thieveryPlan)]).kind,
+  ).toBe('none');
+  expect(
+    matchCheck({ statistic: 'thievery', dc: null, options: [] }, [cand('t1', thieveryPlan)]).kind,
+  ).toBe('none');
 });
 ```
 
@@ -1356,6 +1595,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/services/RollMatcher.js`:
+
 ```js
 import { STATUS, TAG_PREFIX } from '../constants.js';
 import { instanceKey } from './RulesEngine.js';
@@ -1374,7 +1614,9 @@ export function parseTag(options = []) {
 
 export function extractCheck(context = {}) {
   const options = Array.isArray(context.options) ? context.options : [];
-  const stat = options.find((o) => o.startsWith('check:statistic:') && !o.startsWith('check:statistic:base:'));
+  const stat = options.find(
+    (o) => o.startsWith('check:statistic:') && !o.startsWith('check:statistic:base:'),
+  );
   const dc = context.dc?.value;
   return {
     statistic: stat ? stat.slice('check:statistic:'.length) : null,
@@ -1422,10 +1664,12 @@ git commit -m "feat(matcher): match check messages to hazard instances"
 ### Task 6: Hazard store
 
 **Files:**
+
 - Create: `scripts/stores/hazardStore.js`
 - Test: `tests/stores/hazardStore.test.js`
 
 **Interfaces:**
+
 - Consumes: `MODULE_ID`, `PLAN_VERSION`, `STATE_VERSION` (Task 1); `draftPlan` (Task 3); `createInitialState`, `syncStateToPlan` (Task 4).
 - Produces:
   - `getPlan(actor) => Plan|null` (null when absent or unknown version)
@@ -1439,6 +1683,7 @@ git commit -m "feat(matcher): match check messages to hazard instances"
 - [ ] **Step 1: Write the failing tests**
 
 `tests/stores/hazardStore.test.js`:
+
 ```js
 import {
   getOrCreateState,
@@ -1464,7 +1709,12 @@ function doc(flags = {}, source = {}) {
   };
 }
 
-const plan = { version: 1, confirmed: true, actionsPerTurn: 1, components: [{ id: 'c1', count: 2, actionsEach: 0, disables: [{ id: 'd1' }] }] };
+const plan = {
+  version: 1,
+  confirmed: true,
+  actionsPerTurn: 1,
+  components: [{ id: 'c1', count: 2, actionsEach: 0, disables: [{ id: 'd1' }] }],
+};
 
 test('plan round-trip copies data', async () => {
   const a = doc();
@@ -1478,7 +1728,16 @@ test('unknown plan version is ignored', () => {
 });
 
 test('getOrDraftPlan drafts when missing', () => {
-  const a = doc({}, { name: 'Pit', system: { details: { isComplex: false, routine: '', disable: '@Check[thievery|dc:18]', reset: '' } }, items: [] });
+  const a = doc(
+    {},
+    {
+      name: 'Pit',
+      system: {
+        details: { isComplex: false, routine: '', disable: '@Check[thievery|dc:18]', reset: '' },
+      },
+      items: [],
+    },
+  );
   const res = getOrDraftPlan(a);
   expect(res.isDraft).toBe(true);
   expect(res.plan.components[0].disables[0].dc).toBe(18);
@@ -1515,6 +1774,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/stores/hazardStore.js`:
+
 ```js
 import { MODULE_ID, PLAN_VERSION, STATE_VERSION } from '../constants.js';
 import { draftPlan } from '../parser/draftPlan.js';
@@ -1578,10 +1838,12 @@ git commit -m "feat(store): plan and state flag storage"
 ### Task 7: Plan form conversion + plan panel
 
 **Files:**
+
 - Create: `scripts/ui/planForm.js`, `scripts/ui/PlanPanel.js`, `templates/plan-panel.hbs`
 - Test: `tests/ui/planForm.test.js`
 
 **Interfaces:**
+
 - Consumes: `Plan` (Task 3), `getOrDraftPlan`, `setPlan` (Task 6), `MODULE_ID` (Task 1).
 - Produces:
   - `planToContext(plan, warnings, actor) => object` — template context (`warnings` localized via key `PF2E_HAZARDER.Warnings.<code>`; `items` = actor's action/melee items `{ id, name }`)
@@ -1591,6 +1853,7 @@ git commit -m "feat(store): plan and state flag storage"
 - [ ] **Step 1: Write the failing test**
 
 `tests/ui/planForm.test.js`:
+
 ```js
 import { formToPlan, planToContext } from '../../scripts/ui/planForm.js';
 
@@ -1598,7 +1861,18 @@ const base = {
   version: 1,
   confirmed: false,
   actionsPerTurn: 9,
-  components: [{ id: 'c1', name: 'x', count: 1, actionsEach: 0, disables: [{ id: 'd1', skill: 'thievery', dc: 20, label: 'A', traits: ['t'], successesNeeded: 1 }], counteract: null }],
+  components: [
+    {
+      id: 'c1',
+      name: 'x',
+      count: 1,
+      actionsEach: 0,
+      disables: [
+        { id: 'd1', skill: 'thievery', dc: 20, label: 'A', traits: ['t'], successesNeeded: 1 },
+      ],
+      counteract: null,
+    },
+  ],
   reactionItemId: null,
   routineItemIds: [],
   resetText: '',
@@ -1615,7 +1889,10 @@ test('formToPlan parses numbers and confirms', () => {
         name: 'Rune',
         count: '4',
         actionsEach: '0',
-        disables: { 0: { id: 'd1', skill: 'thievery', dc: '22', label: 'Erase', successesNeeded: '1' }, 1: { skill: '', dc: '', label: '', successesNeeded: '' } },
+        disables: {
+          0: { id: 'd1', skill: 'thievery', dc: '22', label: 'Erase', successesNeeded: '1' },
+          1: { skill: '', dc: '', label: '', successesNeeded: '' },
+        },
       },
     },
   };
@@ -1624,20 +1901,44 @@ test('formToPlan parses numbers and confirms', () => {
   expect(plan.actionsPerTurn).toBe(6);
   expect(plan.reactionItemId).toBe('r1');
   expect(plan.components[0]).toMatchObject({ id: 'c1', name: 'Rune', count: 4, actionsEach: 0 });
-  expect(plan.components[0].disables).toEqual([{ id: 'd1', skill: 'thievery', dc: 22, label: 'Erase', traits: ['t'], successesNeeded: 1 }]);
+  expect(plan.components[0].disables).toEqual([
+    { id: 'd1', skill: 'thievery', dc: 22, label: 'Erase', traits: ['t'], successesNeeded: 1 },
+  ]);
 });
 
 test('formToPlan assigns ids, clamps count and blank actions → null', () => {
-  const data = { actionsPerTurn: '', components: { 0: { name: 'A', count: '0', actionsEach: '', disables: { 0: { skill: 'religion', dc: '30', label: '', successesNeeded: '2' } } } } };
+  const data = {
+    actionsPerTurn: '',
+    components: {
+      0: {
+        name: 'A',
+        count: '0',
+        actionsEach: '',
+        disables: { 0: { skill: 'religion', dc: '30', label: '', successesNeeded: '2' } },
+      },
+    },
+  };
   const plan = formToPlan(data, base);
   expect(plan.actionsPerTurn).toBeNull();
   expect(plan.components[0]).toMatchObject({ id: 'c1', count: 1, actionsEach: 0 });
-  expect(plan.components[0].disables[0]).toMatchObject({ id: 'd1', skill: 'religion', dc: 30, label: 'religion', successesNeeded: 2, traits: [] });
+  expect(plan.components[0].disables[0]).toMatchObject({
+    id: 'd1',
+    skill: 'religion',
+    dc: 30,
+    label: 'religion',
+    successesNeeded: 2,
+    traits: [],
+  });
   expect(plan.components[0].counteract).toBeNull();
 });
 
 test('planToContext lists warnings and items', () => {
-  const actor = { items: [{ id: 'r1', name: 'Awaken', type: 'action' }, { id: 'f', name: 'Feat', type: 'feat' }] };
+  const actor = {
+    items: [
+      { id: 'r1', name: 'Awaken', type: 'action' },
+      { id: 'f', name: 'Feat', type: 'feat' },
+    ],
+  };
   const ctx = planToContext(base, ['no-disables'], actor);
   expect(ctx.warnings).toEqual(['PF2E_HAZARDER.Warnings.no-disables']);
   expect(ctx.items).toEqual([{ id: 'r1', name: 'Awaken' }]);
@@ -1653,12 +1954,18 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/ui/planForm.js`:
+
 ```js
 const int = (v) => {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) ? n : null;
 };
-const list = (obj) => (Array.isArray(obj) ? obj : Object.keys(obj ?? {}).sort((a, b) => a - b).map((k) => obj[k]));
+const list = (obj) =>
+  Array.isArray(obj)
+    ? obj
+    : Object.keys(obj ?? {})
+        .sort((a, b) => a - b)
+        .map((k) => obj[k]);
 
 export function planToContext(plan, warnings, actor) {
   return {
@@ -1710,6 +2017,7 @@ export function formToPlan(data, basePlan) {
 ```
 
 `scripts/ui/PlanPanel.js`:
+
 ```js
 import { MODULE_ID } from '../constants.js';
 import { getOrDraftPlan, setPlan } from '../stores/hazardStore.js';
@@ -1760,13 +2068,27 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #addComponent() {
     const n = this.plan.components.length + 1;
-    this.plan.components.push({ id: `c${n}`, name: '', count: 1, actionsEach: 0, disables: [], counteract: null });
+    this.plan.components.push({
+      id: `c${n}`,
+      name: '',
+      count: 1,
+      actionsEach: 0,
+      disables: [],
+      counteract: null,
+    });
     this.render();
   }
 
   static #addDisable(event, target) {
     const comp = this.plan.components[Number(target.dataset.component)];
-    comp.disables.push({ id: `d${comp.disables.length + 1}`, skill: '', dc: null, label: '', traits: [], successesNeeded: 1 });
+    comp.disables.push({
+      id: `d${comp.disables.length + 1}`,
+      skill: '',
+      dc: null,
+      label: '',
+      traits: [],
+      successesNeeded: 1,
+    });
     this.render();
   }
 
@@ -1778,6 +2100,7 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 ```
 
 `templates/plan-panel.hbs`:
+
 ```hbs
 <section class="hazarder-plan-body">
   {{#if warnings.length}}
@@ -1822,9 +2145,17 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 ```
 
 Note: `addComponent`/`addDisable` re-render from `this.plan`, so unsaved edits in visible fields are lost on add. Before pushing, both handlers must first fold current field values into `this.plan`: add as the first line of each handler
+
 ```js
-this.plan = { ...formToPlan(foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(this.element).object), this.plan), confirmed: this.plan.confirmed };
+this.plan = {
+  ...formToPlan(
+    foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(this.element).object),
+    this.plan,
+  ),
+  confirmed: this.plan.confirmed,
+};
 ```
+
 — but `formToPlan` drops blank-skill disables, which would delete the just-added empty row on the next add. Accept that: an empty row only survives until the next add, which is fine for authoring.
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -1844,10 +2175,12 @@ git commit -m "feat(ui): plan confirm panel"
 ### Task 8: Turn card
 
 **Files:**
+
 - Create: `scripts/ui/turnView.js`, `scripts/ui/TurnCard.js`, `templates/turn-card.hbs`
 - Test: `tests/ui/turnView.test.js`
 
 **Interfaces:**
+
 - Consumes: `actionsRemaining`, `disabledCount` (Task 4); `getOrDraftPlan`, `getOrCreateState` (Task 6); `MODULE_ID` (Task 1).
 - Produces:
   - `buildTurnView({ name, plan, state, routineHtml, items }) => { title, total, remaining, pips: Array<{ spent: boolean }>, disabledNote: string|null, routineHtml, items: Array<{ id, name }> }` where `title` is the i18n key result of `PF2E_HAZARDER.Turn.Title`; `pips` length = `total` (0 when total null); pips beyond `remaining` are `spent: true`.
@@ -1856,20 +2189,29 @@ git commit -m "feat(ui): plan confirm panel"
 - [ ] **Step 1: Write the failing test**
 
 `tests/ui/turnView.test.js`:
+
 ```js
 import { buildTurnView } from '../../scripts/ui/turnView.js';
 import { createInitialState } from '../../scripts/services/RulesEngine.js';
 
 const plan = {
   actionsPerTurn: 9,
-  components: [{ id: 'c1', count: 3, actionsEach: 3, disables: [{ id: 'd1', successesNeeded: 1 }] }],
+  components: [
+    { id: 'c1', count: 3, actionsEach: 3, disables: [{ id: 'd1', successesNeeded: 1 }] },
+  ],
   routineItemIds: ['m1', 'zz'],
 };
 
 test('pips reflect disabled instances', () => {
   const state = createInitialState(plan);
   state.instances[0].disabled = true;
-  const v = buildTurnView({ name: 'Mannequins', plan, state, routineHtml: '<p>r</p>', items: [{ id: 'm1', name: 'Fist' }] });
+  const v = buildTurnView({
+    name: 'Mannequins',
+    plan,
+    state,
+    routineHtml: '<p>r</p>',
+    items: [{ id: 'm1', name: 'Fist' }],
+  });
   expect(v.total).toBe(9);
   expect(v.remaining).toBe(6);
   expect(v.pips.filter((p) => p.spent)).toHaveLength(3);
@@ -1878,7 +2220,13 @@ test('pips reflect disabled instances', () => {
 });
 
 test('null actions per turn gives no pips', () => {
-  const v = buildTurnView({ name: 'X', plan: { ...plan, actionsPerTurn: null }, state: createInitialState(plan), routineHtml: '', items: [] });
+  const v = buildTurnView({
+    name: 'X',
+    plan: { ...plan, actionsPerTurn: null },
+    state: createInitialState(plan),
+    routineHtml: '',
+    items: [],
+  });
   expect(v.pips).toEqual([]);
   expect(v.disabledNote).toBeNull();
 });
@@ -1892,6 +2240,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/ui/turnView.js`:
+
 ```js
 import { actionsRemaining, disabledCount } from '../services/RulesEngine.js';
 
@@ -1905,7 +2254,9 @@ export function buildTurnView({ name, plan, state, routineHtml, items }) {
     total,
     remaining,
     pips: Array.from({ length: total }, (_, i) => ({ spent: i >= remaining })),
-    disabledNote: disabled ? game.i18n.format('PF2E_HAZARDER.Turn.DisabledNote', { count: disabled }) : null,
+    disabledNote: disabled
+      ? game.i18n.format('PF2E_HAZARDER.Turn.DisabledNote', { count: disabled })
+      : null,
     routineHtml,
     items: (plan.routineItemIds ?? []).map((id) => byId.get(id)).filter(Boolean),
   };
@@ -1913,6 +2264,7 @@ export function buildTurnView({ name, plan, state, routineHtml, items }) {
 ```
 
 `scripts/ui/TurnCard.js`:
+
 ```js
 import { MODULE_ID } from '../constants.js';
 import { getOrCreateState, getOrDraftPlan } from '../stores/hazardStore.js';
@@ -1959,6 +2311,7 @@ export async function postTurnCard(combatant) {
 ```
 
 `templates/turn-card.hbs`:
+
 ```hbs
 <div class="hazarder-card hz-turn" data-token-uuid="{{tokenUuid}}">
   <h3>{{title}}</h3>
@@ -1995,10 +2348,12 @@ git commit -m "feat(ui): GM hazard turn card with action pool"
 ### Task 9: Disable tracker card
 
 **Files:**
+
 - Create: `scripts/ui/trackerView.js`, `scripts/ui/TrackerCard.js`, `templates/tracker-card.hbs`
 - Test: `tests/ui/trackerView.test.js`
 
 **Interfaces:**
+
 - Consumes: `instanceKey` (Task 4); `buildTag` (Task 5); `getOrDraftPlan`, `getOrCreateState`, `getTrackerMessageId`, `setTrackerMessageId` (Task 6); `getSystemId` (Task 1).
 - Produces:
   - `buildTrackerView({ name, plan, state, isGM }) => { title, status, statusLabel, empty: boolean, components: Array<{ name, counteract: string|null, instances: Array<{ key, label, disabled, options: Array<{ disableId, label, skill, dc, have, need, pips: Array<{ filled }> }> }> }>, isGM }`
@@ -2008,6 +2363,7 @@ git commit -m "feat(ui): GM hazard turn card with action pool"
 - [ ] **Step 1: Write the failing test**
 
 `tests/ui/trackerView.test.js`:
+
 ```js
 import { buildTrackerView } from '../../scripts/ui/trackerView.js';
 import { createInitialState } from '../../scripts/services/RulesEngine.js';
@@ -2034,8 +2390,17 @@ test('builds instances with pips', () => {
   expect(v.statusLabel).toBe('PF2E_HAZARDER.Status.active');
   expect(v.components[0].counteract).toBe('PF2E_HAZARDER.Tracker.Counteract');
   expect(v.components[0].instances.map((i) => i.label)).toEqual(['Rune 1', 'Rune 2']);
-  expect(v.components[0].instances[1].options[0]).toMatchObject({ disableId: 'd1', have: 1, need: 2, skill: 'thievery', dc: 22 });
-  expect(v.components[0].instances[1].options[0].pips).toEqual([{ filled: true }, { filled: false }]);
+  expect(v.components[0].instances[1].options[0]).toMatchObject({
+    disableId: 'd1',
+    have: 1,
+    need: 2,
+    skill: 'thievery',
+    dc: 22,
+  });
+  expect(v.components[0].instances[1].options[0].pips).toEqual([
+    { filled: true },
+    { filled: false },
+  ]);
 });
 
 test('single-instance components are labelled by name only', () => {
@@ -2045,7 +2410,9 @@ test('single-instance components are labelled by name only', () => {
 });
 
 test('no disables anywhere is empty and does not throw', () => {
-  const p = { components: [{ id: 'c1', name: 'X', count: 1, actionsEach: 0, disables: [], counteract: null }] };
+  const p = {
+    components: [{ id: 'c1', name: 'X', count: 1, actionsEach: 0, disables: [], counteract: null }],
+  };
   const v = buildTrackerView({ name: 'X', plan: p, state: createInitialState(p), isGM: true });
   expect(v.empty).toBe(true);
   expect(v.components[0].instances[0].options).toEqual([]);
@@ -2060,6 +2427,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/ui/trackerView.js`:
+
 ```js
 import { instanceKey } from '../services/RulesEngine.js';
 
@@ -2106,10 +2474,16 @@ export function buildTrackerView({ name, plan, state, isGM }) {
 ```
 
 `scripts/ui/TrackerCard.js`:
+
 ```js
 import { MODULE_ID } from '../constants.js';
 import { buildTag } from '../services/RollMatcher.js';
-import { getOrCreateState, getOrDraftPlan, getTrackerMessageId, setTrackerMessageId } from '../stores/hazardStore.js';
+import {
+  getOrCreateState,
+  getOrDraftPlan,
+  getTrackerMessageId,
+  setTrackerMessageId,
+} from '../stores/hazardStore.js';
 import { buildTrackerView } from './trackerView.js';
 
 const TEMPLATE = `modules/${MODULE_ID}/templates/tracker-card.hbs`;
@@ -2118,7 +2492,10 @@ export async function renderTrackerContent(tokenDoc) {
   const { plan } = getOrDraftPlan(tokenDoc.actor);
   const state = getOrCreateState(tokenDoc, plan);
   const view = buildTrackerView({ name: tokenDoc.name, plan, state, isGM: game.user.isGM });
-  return foundry.applications.handlebars.renderTemplate(TEMPLATE, { ...view, tokenUuid: tokenDoc.uuid });
+  return foundry.applications.handlebars.renderTemplate(TEMPLATE, {
+    ...view,
+    tokenUuid: tokenDoc.uuid,
+  });
 }
 
 export async function upsertTracker(tokenDoc) {
@@ -2142,7 +2519,9 @@ export async function rollDisable({ tokenUuid, instanceKey, disableId }) {
   if (!tokenDoc?.actor) return;
   const { plan } = getOrDraftPlan(tokenDoc.actor);
   const [componentId, index] = instanceKey.split(':');
-  const disable = plan.components.find((c) => c.id === componentId)?.disables.find((d) => d.id === disableId);
+  const disable = plan.components
+    .find((c) => c.id === componentId)
+    ?.disables.find((d) => d.id === disableId);
   if (!disable) return;
   const roller = canvas.tokens?.controlled?.[0]?.actor ?? game.user.character;
   if (!roller) {
@@ -2160,6 +2539,7 @@ export async function rollDisable({ tokenUuid, instanceKey, disableId }) {
 ```
 
 `templates/tracker-card.hbs`:
+
 ```hbs
 <div class="hazarder-card hz-tracker" data-token-uuid="{{tokenUuid}}">
   <h3>{{title}} <small>({{statusLabel}})</small></h3>
@@ -2211,12 +2591,15 @@ git commit -m "feat(ui): disable tracker chat card"
 ### Task 10: Hazard runner (GM-side orchestration)
 
 **Files:**
+
 - Create: `scripts/services/HazardRunner.js`, `scripts/ui/TriggeredPrompt.js`
 - Test: `tests/services/HazardRunner.test.js`
 
 **Interfaces:**
+
 - Consumes: Tasks 4–9. `OUTCOME_TO_DEGREE`, `MODULE_ID` (Task 1); `getSystemFlags` (Task 1).
 - Produces a `HazardRunner` class constructed with injectable deps (for tests):
+
   ```
   new HazardRunner({
     getCandidates: () => Array<{ tokenId, tokenDoc, plan, state }>,
@@ -2227,6 +2610,7 @@ git commit -m "feat(ui): disable tracker chat card"
     now: () => number,
   })
   ```
+
   Methods:
   - `async handleCheckMessage(message) => { kind, applied: boolean }` — ignores when `!isWriter()`, when `flags["pf2e-hazarder"].applied`, or when context type isn't `skill-check`/`perception-check` or outcome missing. `tagged`/`unique` → `applyResult` + mark message applied. `ambiguous` → `message.setFlag(MODULE_ID, 'candidates', matches)`.
   - `async apply(tokenDoc, { instanceKey, disableId, degree, actorUuid, messageId, userId, isReroll }) => events`
@@ -2237,6 +2621,7 @@ git commit -m "feat(ui): disable tracker chat card"
 - [ ] **Step 1: Write the failing test**
 
 `tests/services/HazardRunner.test.js`:
+
 ```js
 import { HazardRunner } from '../../scripts/services/HazardRunner.js';
 import { createInitialState, activate } from '../../scripts/services/RulesEngine.js';
@@ -2245,7 +2630,15 @@ const plan = {
   version: 1,
   confirmed: true,
   actionsPerTurn: 2,
-  components: [{ id: 'c1', name: 'Rune', count: 1, actionsEach: 0, disables: [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 }] }],
+  components: [
+    {
+      id: 'c1',
+      name: 'Rune',
+      count: 1,
+      actionsEach: 0,
+      disables: [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 }],
+    },
+  ],
   reactionItemId: 'r1',
 };
 
@@ -2277,7 +2670,13 @@ const msg = (context, flags = {}) => ({
   speaker: { actor: 'a1' },
   setFlag: jest.fn(),
 });
-const ctx = (over = {}) => ({ type: 'skill-check', outcome: 'success', dc: { value: 22 }, options: ['check:statistic:thievery'], ...over });
+const ctx = (over = {}) => ({
+  type: 'skill-check',
+  outcome: 'success',
+  dc: { value: 22 },
+  options: ['check:statistic:thievery'],
+  ...over,
+});
 
 test('unique match applies, marks message, refreshes tracker', async () => {
   const { runner, tokenDoc, ui } = setup();
@@ -2324,12 +2723,20 @@ test('ambiguous stores candidates on the message', async () => {
 test('reroll flag is passed through', async () => {
   const { runner, tokenDoc } = setup();
   await runner.handleCheckMessage(msg(ctx({ outcome: 'failure' })));
-  await runner.handleCheckMessage({ ...msg(ctx({ outcome: 'success', isReroll: true })), id: 'm2' });
+  await runner.handleCheckMessage({
+    ...msg(ctx({ outcome: 'success', isReroll: true })),
+    id: 'm2',
+  });
   expect(tokenDoc.state.history.filter((h) => h.kind === 'result')).toHaveLength(1);
 });
 
 test('overridePip cycles progress', async () => {
-  const p2 = { ...plan, components: [{ ...plan.components[0], disables: [{ id: 'd1', skill: 'x', dc: 1, successesNeeded: 2 }] }] };
+  const p2 = {
+    ...plan,
+    components: [
+      { ...plan.components[0], disables: [{ id: 'd1', skill: 'x', dc: 1, successesNeeded: 2 }] },
+    ],
+  };
   const { runner, tokenDoc, store } = setup();
   store.getOrDraftPlan = () => ({ plan: p2, warnings: [], isDraft: false });
   tokenDoc.state = activate(createInitialState(p2));
@@ -2350,6 +2757,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/services/HazardRunner.js`:
+
 ```js
 import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
 import { getSystemFlags } from '../systemCompat.js';
@@ -2363,7 +2771,12 @@ export function defaultCandidates(store) {
   const add = (tokenDoc) => {
     if (!tokenDoc?.actor || tokenDoc.actor.type !== 'hazard' || seen.has(tokenDoc.id)) return;
     const { plan } = store.getOrDraftPlan(tokenDoc.actor);
-    seen.set(tokenDoc.id, { tokenId: tokenDoc.id, tokenDoc, plan, state: store.getOrCreateState(tokenDoc, plan) });
+    seen.set(tokenDoc.id, {
+      tokenId: tokenDoc.id,
+      tokenDoc,
+      plan,
+      state: store.getOrCreateState(tokenDoc, plan),
+    });
   };
   for (const c of game.combat?.combatants ?? []) add(c.token);
   for (const t of canvas.scene?.tokens ?? []) {
@@ -2427,7 +2840,8 @@ export class HazardRunner {
   async #afterEvents(tokenDoc, plan, events) {
     for (const e of events) {
       if (e.type === 'hazardTriggered') await this.ui.showTriggered(tokenDoc, plan);
-      if (e.type === 'hazardDisabled') this.ui.notify(game.i18n.format('PF2E_HAZARDER.Disabled', { name: tokenDoc.name }));
+      if (e.type === 'hazardDisabled')
+        this.ui.notify(game.i18n.format('PF2E_HAZARDER.Disabled', { name: tokenDoc.name }));
     }
   }
 
@@ -2441,21 +2855,31 @@ export class HazardRunner {
 
   async undo(tokenDoc) {
     const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    await this.store.setState(tokenDoc, Engine.undo(this.store.getOrCreateState(tokenDoc, plan), plan));
+    await this.store.setState(
+      tokenDoc,
+      Engine.undo(this.store.getOrCreateState(tokenDoc, plan), plan),
+    );
     await this.ui.upsertTracker(tokenDoc);
   }
 
   async reset(tokenDoc) {
     const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-    await this.store.setState(tokenDoc, Engine.reset(this.store.getOrCreateState(tokenDoc, plan), plan));
+    await this.store.setState(
+      tokenDoc,
+      Engine.reset(this.store.getOrCreateState(tokenDoc, plan), plan),
+    );
     await this.ui.upsertTracker(tokenDoc);
   }
 
   async overridePip(tokenDoc, instanceKey, disableId) {
     const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
     const state = this.store.getOrCreateState(tokenDoc, plan);
-    const inst = state.instances.find((i) => Engine.instanceKey(i.componentId, i.index) === instanceKey);
-    const disable = plan.components.find((c) => c.id === inst?.componentId)?.disables.find((d) => d.id === disableId);
+    const inst = state.instances.find(
+      (i) => Engine.instanceKey(i.componentId, i.index) === instanceKey,
+    );
+    const disable = plan.components
+      .find((c) => c.id === inst?.componentId)
+      ?.disables.find((d) => d.id === disableId);
     if (!inst || !disable) return;
     const need = disable.successesNeeded ?? 1;
     const have = inst.progress[disableId] ?? 0;
@@ -2474,6 +2898,7 @@ export class HazardRunner {
 ```
 
 `scripts/ui/TriggeredPrompt.js`:
+
 ```js
 export async function showTriggered(tokenDoc, plan) {
   const name = tokenDoc.name;
@@ -2504,11 +2929,13 @@ git commit -m "feat(runner): GM-side result application and triggered prompt"
 ### Task 11: Hook wiring, API and sheet button
 
 **Files:**
+
 - Create: `scripts/hooks/predicates.js` (pure; keeps the test free of `PlanPanel`, whose module body reads `foundry.applications` at import time), `scripts/hooks/registration.js`, `scripts/api.js`
 - Modify: `scripts/main.js`
 - Test: `tests/hooks/predicates.test.js`
 
 **Interfaces:**
+
 - Consumes: everything above.
 - Produces:
   - `registerHooks(runner) => void`
@@ -2517,6 +2944,7 @@ git commit -m "feat(runner): GM-side result application and triggered prompt"
   - From `scripts/hooks/predicates.js`: `shouldPromptForPlan(actor) => boolean` (true for complex hazards whose stored plan is missing or unconfirmed), `isHazardTurn(combat) => boolean`.
 
 Hooks registered (all GM-gated through `runner.isWriter()` unless noted):
+
 - `createCombatant(combatant)`: if hazard → if `shouldPromptForPlan` → `DialogV2.confirm(PF2E_HAZARDER.Plan.Review)` → yes: `await PlanPanel.open(actor)`; then `runner.startHazard(combatant.token)`.
 - `combatTurnChange(combat)`: if `isHazardTurn(combat)` → state disabled and setting `skipDisabledTurns` → `combat.nextTurn()`; else `postTurnCard(combat.combatant)`.
 - `createChatMessage(message)`: `runner.handleCheckMessage(message)`.
@@ -2527,6 +2955,7 @@ Hooks registered (all GM-gated through `runner.isWriter()` unless noted):
 - [ ] **Step 1: Write the failing test**
 
 `tests/hooks/predicates.test.js`:
+
 ```js
 import { isHazardTurn, shouldPromptForPlan } from '../../scripts/hooks/predicates.js';
 
@@ -2559,6 +2988,7 @@ Expected: FAIL with "Cannot find module"
 - [ ] **Step 3: Write implementation**
 
 `scripts/hooks/predicates.js`:
+
 ```js
 import { getPlan } from '../stores/hazardStore.js';
 
@@ -2574,6 +3004,7 @@ export function isHazardTurn(combat) {
 ```
 
 `scripts/hooks/registration.js`:
+
 ```js
 import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
 import { getSystemFlags } from '../systemCompat.js';
@@ -2643,13 +3074,18 @@ async function onCardClick(runner, event) {
   const tokenUuid = el.dataset.tokenUuid ?? card?.dataset.tokenUuid;
   const action = el.dataset.hzAction;
   if (action === 'disable') {
-    return rollDisable({ tokenUuid, instanceKey: el.dataset.instanceKey, disableId: el.dataset.disableId });
+    return rollDisable({
+      tokenUuid,
+      instanceKey: el.dataset.instanceKey,
+      disableId: el.dataset.disableId,
+    });
   }
   const tokenDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
   if (!tokenDoc) return;
   if (action === 'item') return tokenDoc.actor?.items.get(el.dataset.itemId)?.toMessage();
   if (!game.user.isGM) return;
-  if (action === 'pip') return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
+  if (action === 'pip')
+    return runner.overridePip(tokenDoc, el.dataset.instanceKey, el.dataset.disableId);
   if (action === 'undo') return runner.undo(tokenDoc);
   if (action === 'reset') {
     const resetText = getPlan(tokenDoc.actor)?.resetText ?? '';
@@ -2724,6 +3160,7 @@ export function registerHooks(runner) {
 Note on `updateActor`: `startHazard` re-syncs state to the edited plan and refreshes the tracker — this is the "plan edited mid-combat" path from Review Focus #5. It also re-activates an armed hazard whose plan changed; that is acceptable in phase 1 because editing a plan only happens when the GM is actively running the hazard.
 
 `scripts/api.js`:
+
 ```js
 import * as store from './stores/hazardStore.js';
 import { HazardRunner, defaultCandidates } from './services/HazardRunner.js';
@@ -2735,7 +3172,9 @@ export function createRunner() {
   return new HazardRunner({
     getCandidates: () => defaultCandidates(store),
     resolveToken: (id) =>
-      canvas.scene?.tokens.get(id) ?? game.combat?.combatants.find((c) => c.tokenId === id)?.token ?? null,
+      canvas.scene?.tokens.get(id) ??
+      game.combat?.combatants.find((c) => c.tokenId === id)?.token ??
+      null,
     store,
     ui: { upsertTracker, showTriggered, notify: (t) => ui.notifications.info(t) },
     isWriter: () => !!game.users.activeGM?.isSelf,
@@ -2753,6 +3192,7 @@ export function buildApi(runner) {
 ```
 
 `scripts/main.js` (replace whole file):
+
 ```js
 import { MODULE_ID } from './constants.js';
 import { detectSystem } from './systemCompat.js';
@@ -2787,21 +3227,23 @@ git commit -m "feat: wire hooks, chat card actions, sheet button and API"
 ### Task 12: Live verification, README, CHANGELOG
 
 **Files:**
+
 - Create: `tests/live/run.mjs`, `README.md`, `CHANGELOG.md`
 - Reference: `../pf2e-afflictioner/tests/live/run.mjs` (copy its connection/login/world-launch helpers; do not reinvent them)
 
 **Interfaces:**
+
 - Consumes: `game.modules.get('pf2e-hazarder').api` (Task 11).
 
 - [ ] **Step 1: Write the live harness**
 
-Copy `../pf2e-afflictioner/tests/live/run.mjs` to `tests/live/run.mjs` and replace its scenario list with the steps below. Keep its existing helpers for launching/attaching to Foundry, logging in as GM and as a player in a second browser context, and `page.evaluate`. Each scenario runs inside `page.evaluate` on the GM page unless marked *player*:
+Copy `../pf2e-afflictioner/tests/live/run.mjs` to `tests/live/run.mjs` and replace its scenario list with the steps below. Keep its existing helpers for launching/attaching to Foundry, logging in as GM and as a player in a second browser context, and `page.evaluate`. Each scenario runs inside `page.evaluate` on the GM page unless marked _player_:
 
 1. Import "Wheel of Misery" from `pf2e.hazards` into the world; place a token on the active scene; create a combat with the token and one PC.
 2. Assert the review dialog opened; click Save in the `PlanPanel` (`.hazarder-plan button[type=submit]`).
 3. Assert `actor.getFlag('pf2e-hazarder','plan').confirmed === true` and a chat message with `flags['pf2e-hazarder'].kind === 'tracker'` exists.
 4. Advance turns until the hazard's turn; assert a whispered message with `flags['pf2e-hazarder'].kind === 'turn'`.
-5. *Player*: control the PC token, click the first `[data-hz-action="disable"]` button on the tracker card.
+5. _Player_: control the PC token, click the first `[data-hz-action="disable"]` button on the tracker card.
 6. GM: wait for the resulting check message; assert it has `flags['pf2e-hazarder'].applied === true` and the token state changed (progress incremented, or status `triggered` on crit fail).
 7. GM: `api.runner.apply(tokenDoc, { instanceKey, disableId, degree: 3 })` for every remaining instance; assert status `disabled`.
 8. GM: click Reset on the tracker card and confirm; assert status `armed`.
@@ -2813,31 +3255,37 @@ Expected: every scenario prints `PASS`. If a step fails, fix the code (not the a
 - [ ] **Step 2: Write README and CHANGELOG**
 
 `README.md`:
+
 ```markdown
 # PF2e Hazarder
 
 Run Pathfinder 2e and Starfinder 2e hazards in Foundry VTT v14.
 
 ## Phase 1 features
+
 - **Hazard plans**: parses a hazard's routine and disable text into actions per turn, components, disable options and counteracts. The GM reviews and saves once; the plan lives on the actor.
 - **GM turn card**: on the hazard's turn, shows remaining actions (reduced as components are disabled), the routine, and buttons for its Strikes and actions.
 - **Disable tracker**: one chat card per hazard token with per-component progress. Players roll from the card; results from inline checks or check requests are matched automatically, ambiguous ones get a GM picker.
 - **States**: armed, triggered, active, disabled, reset. Critical failures prompt the GM to post the reaction.
 
 ## Usage
+
 Add a complex hazard to combat. Review the plan when asked, then run combat as normal. GMs can open the plan from the hazard sheet header ("Hazard Plan") or via `game.modules.get('pf2e-hazarder').api.openPlan(actor)`.
 
 ## Settings
+
 - Public hazard turn card
 - Skip disabled hazards
 - Remove disabled hazards from combat
 ```
 
 `CHANGELOG.md`:
+
 ```markdown
 # Changelog
 
 ## 0.1.0
+
 - Phase 1: hazard plans, GM turn card, disable tracker, triggered/disabled/reset states.
 ```
 

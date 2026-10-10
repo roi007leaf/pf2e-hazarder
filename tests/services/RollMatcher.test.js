@@ -1,8 +1,19 @@
-import { buildTag, extractCheck, matchCheck, parseTag } from '../../scripts/services/RollMatcher.js';
+import {
+  buildTag,
+  extractCheck,
+  matchCheck,
+  parseTag,
+} from '../../scripts/services/RollMatcher.js';
 import { createInitialState } from '../../scripts/services/RulesEngine.js';
 
-const planOf = (count, disables) => ({ components: [{ id: 'c1', count, actionsEach: 0, disables }] });
-const cand = (tokenId, plan, status = 'active') => ({ tokenId, plan, state: { ...createInitialState(plan), status } });
+const planOf = (count, disables) => ({
+  components: [{ id: 'c1', count, actionsEach: 0, disables }],
+});
+const cand = (tokenId, plan, status = 'active') => ({
+  tokenId,
+  plan,
+  state: { ...createInitialState(plan), status },
+});
 const thieveryPlan = planOf(1, [{ id: 'd1', skill: 'thievery', dc: 22, successesNeeded: 1 }]);
 
 test('tag round-trips', () => {
@@ -13,7 +24,10 @@ test('tag round-trips', () => {
 });
 
 test('extractCheck reads statistic and dc', () => {
-  const ctx = { dc: { value: 22 }, options: ['check:statistic:base:thievery', 'check:statistic:thievery'] };
+  const ctx = {
+    dc: { value: 22 },
+    options: ['check:statistic:base:thievery', 'check:statistic:thievery'],
+  };
   expect(extractCheck(ctx)).toEqual({ statistic: 'thievery', dc: 22, options: ctx.options });
   expect(extractCheck({})).toEqual({ statistic: null, dc: null, options: [] });
 });
@@ -27,7 +41,9 @@ test('tagged wins', () => {
 });
 
 test('unique skill + dc match', () => {
-  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [cand('t1', thieveryPlan)]);
+  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [
+    cand('t1', thieveryPlan),
+  ]);
   expect(res.kind).toBe('unique');
   expect(res.matches).toEqual([{ tokenId: 't1', instanceKey: 'c1:0', disableId: 'd1' }]);
 });
@@ -40,7 +56,10 @@ test('multi-instance component is ambiguous', () => {
 });
 
 test('two hazards same check is ambiguous', () => {
-  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [cand('t1', thieveryPlan), cand('t2', thieveryPlan)]);
+  const res = matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [
+    cand('t1', thieveryPlan),
+    cand('t2', thieveryPlan),
+  ]);
   expect(res.kind).toBe('ambiguous');
 });
 
@@ -49,11 +68,21 @@ test('disabled hazards and disabled instances are skipped', () => {
   const c = cand('t1', plan);
   c.state.instances[0].disabled = true;
   expect(matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [c]).kind).toBe('unique');
-  expect(matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [cand('t1', thieveryPlan, 'disabled')]).kind).toBe('none');
+  expect(
+    matchCheck({ statistic: 'thievery', dc: 22, options: [] }, [
+      cand('t1', thieveryPlan, 'disabled'),
+    ]).kind,
+  ).toBe('none');
 });
 
 test('wrong dc, missing statistic or missing dc is none', () => {
-  expect(matchCheck({ statistic: 'thievery', dc: 23, options: [] }, [cand('t1', thieveryPlan)]).kind).toBe('none');
-  expect(matchCheck({ statistic: null, dc: 22, options: [] }, [cand('t1', thieveryPlan)]).kind).toBe('none');
-  expect(matchCheck({ statistic: 'thievery', dc: null, options: [] }, [cand('t1', thieveryPlan)]).kind).toBe('none');
+  expect(
+    matchCheck({ statistic: 'thievery', dc: 23, options: [] }, [cand('t1', thieveryPlan)]).kind,
+  ).toBe('none');
+  expect(
+    matchCheck({ statistic: null, dc: 22, options: [] }, [cand('t1', thieveryPlan)]).kind,
+  ).toBe('none');
+  expect(
+    matchCheck({ statistic: 'thievery', dc: null, options: [] }, [cand('t1', thieveryPlan)]).kind,
+  ).toBe('none');
 });

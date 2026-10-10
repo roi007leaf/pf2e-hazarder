@@ -24,7 +24,12 @@ describe('parseInlineChecks', () => {
   test('supports type: key, brace label and comma traits', () => {
     const html = '@Check[type:religion|dc:35|traits:haunt,mechanical]{Religion (expert)}';
     const [c] = parseInlineChecks(html);
-    expect(c).toMatchObject({ skill: 'religion', dc: 35, label: 'Religion (expert)', traits: ['haunt', 'mechanical'] });
+    expect(c).toMatchObject({
+      skill: 'religion',
+      dc: 35,
+      label: 'Religion (expert)',
+      traits: ['haunt', 'mechanical'],
+    });
   });
   test('falls back to skill as label and null dc', () => {
     const [c] = parseInlineChecks('@Check[survival]');
@@ -45,10 +50,19 @@ describe('parseCounteracts', () => {
     const html =
       '@UUID[Compendium.pf2e.spells-srd.Item.9HpwDN4MYQJnW0LG]{Dispel Magic} (6th rank; counteract DC 30) to counteract';
     expect(parseCounteracts(html)).toEqual([
-      { spellUuid: 'Compendium.pf2e.spells-srd.Item.9HpwDN4MYQJnW0LG', name: 'Dispel Magic', rank: 6, dc: 30 },
+      {
+        spellUuid: 'Compendium.pf2e.spells-srd.Item.9HpwDN4MYQJnW0LG',
+        name: 'Dispel Magic',
+        rank: 6,
+        dc: 30,
+      },
     ]);
   });
   test('ignores non-spell uuids', () => {
-    expect(parseCounteracts('@UUID[Compendium.pf2e.equipment-srd.Item.x]{Rope} (1st rank; counteract DC 1)')).toEqual([]);
+    expect(
+      parseCounteracts(
+        '@UUID[Compendium.pf2e.equipment-srd.Item.x]{Rope} (1st rank; counteract DC 1)',
+      ),
+    ).toEqual([]);
   });
 });

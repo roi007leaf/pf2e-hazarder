@@ -1,7 +1,18 @@
 import { PLAN_VERSION } from '../constants.js';
 import { parseCounteracts, parseInlineChecks, stripHtml } from './inline.js';
 
-const WORD_NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+const WORD_NUM = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+};
 const NUM = '\\d+|one|two|three|four|five|six|seven|eight|nine|ten';
 const toNum = (s) => (/^\d+$/.test(s) ? Number(s) : (WORD_NUM[s.toLowerCase()] ?? null));
 
@@ -31,13 +42,19 @@ function successesAfter(rawDisable, check, nextIndex) {
 
 const PROFICIENCY_RE = /\(\s*(?:untrained|trained|expert|master|legendary)\s*\)/gi;
 const isConnectorOnly = (text) =>
-  stripHtml(text).replace(PROFICIENCY_RE, '').replace(/[,;]|\b(?:or|and)\b/gi, '').trim() === '';
+  stripHtml(text)
+    .replace(PROFICIENCY_RE, '')
+    .replace(/[,;]|\b(?:or|and)\b/gi, '')
+    .trim() === '';
 
 // Alternatives joined only by connectors share the multiplier written after the last one.
 function successesFor(rawDisable, checks) {
-  const counts = checks.map((c, i) => successesAfter(rawDisable, c, checks[i + 1]?.index ?? rawDisable.length));
+  const counts = checks.map((c, i) =>
+    successesAfter(rawDisable, c, checks[i + 1]?.index ?? rawDisable.length),
+  );
   for (let i = checks.length - 2; i >= 0; i--) {
-    if (isConnectorOnly(rawDisable.slice(checks[i].end, checks[i + 1].index))) counts[i] = counts[i + 1];
+    if (isConnectorOnly(rawDisable.slice(checks[i].end, checks[i + 1].index)))
+      counts[i] = counts[i + 1];
   }
   return counts;
 }
@@ -58,7 +75,9 @@ function parseActionsPerTurn(text) {
 }
 
 function parseComponent(routineText) {
-  const each = /uses\s+(\d+|one|two|three|four|five|six)\s+of\s+the\s+[\w'’ ]*?actions/i.exec(routineText);
+  const each = /uses\s+(\d+|one|two|three|four|five|six)\s+of\s+the\s+[\w'’ ]*?actions/i.exec(
+    routineText,
+  );
   const noun =
     /every\s+disabled(?:\s+or\s+destroyed)?\s+(\w+)/i.exec(routineText) ??
     /each\s+(?:of\s+the\s+)?(\w+?)s?\s+uses/i.exec(routineText);

@@ -41,8 +41,13 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** Fold current field values into this.plan, keeping blank rows so freshly added rows survive. */
   #foldForm() {
-    const data = foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(this.element).object);
-    this.plan = { ...formToPlan(data, this.plan, { keepBlank: true }), confirmed: this.plan.confirmed };
+    const data = foundry.utils.expandObject(
+      new foundry.applications.ux.FormDataExtended(this.element).object,
+    );
+    this.plan = {
+      ...formToPlan(data, this.plan, { keepBlank: true }),
+      confirmed: this.plan.confirmed,
+    };
   }
 
   static async #onSubmit(event, form, formData) {
@@ -53,14 +58,28 @@ export class PlanPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static #addComponent() {
     this.#foldForm();
-    this.plan.components.push({ id: nextId('c', this.plan.components), name: '', count: 1, actionsEach: 0, disables: [], counteract: null });
+    this.plan.components.push({
+      id: nextId('c', this.plan.components),
+      name: '',
+      count: 1,
+      actionsEach: 0,
+      disables: [],
+      counteract: null,
+    });
     this.render();
   }
 
   static #addDisable(event, target) {
     this.#foldForm();
     const comp = this.plan.components[Number(target.dataset.component)];
-    comp.disables.push({ id: nextId('d', comp.disables), skill: '', dc: null, label: '', traits: [], successesNeeded: 1 });
+    comp.disables.push({
+      id: nextId('d', comp.disables),
+      skill: '',
+      dc: null,
+      label: '',
+      traits: [],
+      successesNeeded: 1,
+    });
     this.render();
   }
 

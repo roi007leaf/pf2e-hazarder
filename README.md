@@ -3,20 +3,24 @@
 Run Pathfinder 2e and Starfinder 2e hazards in Foundry VTT v14.
 
 ## Phase 1 features
+
 - **Hazard plans**: parses a hazard's routine and disable text into actions per turn, components, disable options and counteracts. The GM reviews and saves once; the plan lives on the actor.
 - **GM turn card**: on the hazard's turn, shows remaining actions (reduced as components are disabled), the routine, and buttons for its Strikes and actions.
 - **Disable tracker**: one chat card per hazard token with per-component progress. Players roll from the card; results from inline checks or check requests are matched automatically, ambiguous ones get a GM picker.
 - **States**: armed, triggered, active, disabled, reset. Critical failures prompt the GM to post the reaction.
 
 ## Usage
+
 Add a complex hazard to combat. Review the plan when asked, then run combat as normal. GMs can open the plan from the hazard sheet header ("Hazard Plan") or via `game.modules.get('pf2e-hazarder').api.openPlan(actor)`.
 
 ## Settings
+
 - Public hazard turn card
 - Skip disabled hazards
 - Remove disabled hazards from combat
 
 ## Live tests
+
 `npm run test:live` drives a real Foundry world with Playwright (GM and player browsers) through nine scenarios: import Wheel of Misery, review and save its plan, hazard turn card, a player disable roll, applying results, disabling every instance, reset, and cleanup. It is manual only: it never runs in CI and is not shipped.
 
 1. Launch a disposable Foundry 14 / PF2e world with this checkout and pf2e-hazarder enabled. The world id must be `visioner-qa`, or set `VISIONER_DISPOSABLE_WORLD`; the runner refuses any other world.

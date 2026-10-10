@@ -23,8 +23,17 @@ test('builds instances with pips', () => {
   expect(v.statusLabel).toBe('PF2E_HAZARDER.Status.active');
   expect(v.components[0].counteract).toBe('PF2E_HAZARDER.Tracker.Counteract');
   expect(v.components[0].instances.map((i) => i.label)).toEqual(['Rune 1', 'Rune 2']);
-  expect(v.components[0].instances[1].options[0]).toMatchObject({ disableId: 'd1', have: 1, need: 2, skill: 'thievery', dc: 22 });
-  expect(v.components[0].instances[1].options[0].pips).toEqual([{ filled: true }, { filled: false }]);
+  expect(v.components[0].instances[1].options[0]).toMatchObject({
+    disableId: 'd1',
+    have: 1,
+    need: 2,
+    skill: 'thievery',
+    dc: 22,
+  });
+  expect(v.components[0].instances[1].options[0].pips).toEqual([
+    { filled: true },
+    { filled: false },
+  ]);
 });
 
 test('single-instance components are labelled by name only', () => {
@@ -34,7 +43,9 @@ test('single-instance components are labelled by name only', () => {
 });
 
 test('no disables anywhere is empty and does not throw', () => {
-  const p = { components: [{ id: 'c1', name: 'X', count: 1, actionsEach: 0, disables: [], counteract: null }] };
+  const p = {
+    components: [{ id: 'c1', name: 'X', count: 1, actionsEach: 0, disables: [], counteract: null }],
+  };
   const v = buildTrackerView({ name: 'X', plan: p, state: createInitialState(p), isGM: true });
   expect(v.empty).toBe(true);
   expect(v.components[0].instances[0].options).toEqual([]);

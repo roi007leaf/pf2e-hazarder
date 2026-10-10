@@ -22,7 +22,12 @@ function doc(flags = {}, source = {}) {
   };
 }
 
-const plan = { version: 1, confirmed: true, actionsPerTurn: 1, components: [{ id: 'c1', count: 2, actionsEach: 0, disables: [{ id: 'd1' }] }] };
+const plan = {
+  version: 1,
+  confirmed: true,
+  actionsPerTurn: 1,
+  components: [{ id: 'c1', count: 2, actionsEach: 0, disables: [{ id: 'd1' }] }],
+};
 
 test('plan round-trip copies data', async () => {
   const a = doc();
@@ -36,7 +41,16 @@ test('unknown plan version is ignored', () => {
 });
 
 test('getOrDraftPlan drafts when missing', () => {
-  const a = doc({}, { name: 'Pit', system: { details: { isComplex: false, routine: '', disable: '@Check[thievery|dc:18]', reset: '' } }, items: [] });
+  const a = doc(
+    {},
+    {
+      name: 'Pit',
+      system: {
+        details: { isComplex: false, routine: '', disable: '@Check[thievery|dc:18]', reset: '' },
+      },
+      items: [],
+    },
+  );
   const res = getOrDraftPlan(a);
   expect(res.isDraft).toBe(true);
   expect(res.plan.components[0].disables[0].dc).toBe(18);

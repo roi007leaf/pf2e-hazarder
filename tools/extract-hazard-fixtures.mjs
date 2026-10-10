@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-const FOUNDRY_APP = process.env.FOUNDRY_APP ?? 'C:/Program Files/Foundry Virtual Tabletop/resources/app';
+const FOUNDRY_APP =
+  process.env.FOUNDRY_APP ?? 'C:/Program Files/Foundry Virtual Tabletop/resources/app';
 const PACKS = process.env.PF2E_PACKS ?? path.resolve('../../systems/pf2e/packs');
 const require = createRequire(import.meta.url);
 const { ClassicLevel } = require(path.join(FOUNDRY_APP, 'node_modules/classic-level'));
@@ -54,4 +55,6 @@ for (const pack of fs.readdirSync(PACKS)) {
 }
 fs.mkdirSync('tests/fixtures', { recursive: true });
 fs.writeFileSync('tests/fixtures/hazards.json', JSON.stringify(out, null, 1));
-console.log(`wrote ${out.length} hazards (${out.filter((h) => h.system.details.isComplex).length} complex)`);
+console.log(
+  `wrote ${out.length} hazards (${out.filter((h) => h.system.details.isComplex).length} complex)`,
+);

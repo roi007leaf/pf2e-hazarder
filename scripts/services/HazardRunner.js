@@ -10,7 +10,12 @@ export function defaultCandidates(store) {
   const add = (tokenDoc) => {
     if (!tokenDoc?.actor || tokenDoc.actor.type !== 'hazard' || seen.has(tokenDoc.id)) return;
     const { plan } = store.getOrDraftPlan(tokenDoc.actor);
-    seen.set(tokenDoc.id, { tokenId: tokenDoc.id, tokenDoc, plan, state: store.getOrCreateState(tokenDoc, plan) });
+    seen.set(tokenDoc.id, {
+      tokenId: tokenDoc.id,
+      tokenDoc,
+      plan,
+      state: store.getOrCreateState(tokenDoc, plan),
+    });
   };
   for (const c of game.combat?.combatants ?? []) add(c.token);
   for (const t of canvas.scene?.tokens ?? []) {
@@ -89,7 +94,11 @@ export class HazardRunner {
     const { events, plan } = await this.#enqueue(tokenDoc, async () => {
       const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
       const state = this.store.getOrCreateState(tokenDoc, plan);
-      if (r.messageId && !r.isReroll && state.history?.some((h) => h.kind === 'result' && h.messageId === r.messageId)) {
+      if (
+        r.messageId &&
+        !r.isReroll &&
+        state.history?.some((h) => h.kind === 'result' && h.messageId === r.messageId)
+      ) {
         return {
           events: [{ type: 'ignored', reason: 'duplicate-message', instanceKey: r.instanceKey }],
           plan,
@@ -134,7 +143,10 @@ export class HazardRunner {
   async undo(tokenDoc) {
     return this.#enqueue(tokenDoc, async () => {
       const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-      await this.store.setState(tokenDoc, Engine.undo(this.store.getOrCreateState(tokenDoc, plan), plan));
+      await this.store.setState(
+        tokenDoc,
+        Engine.undo(this.store.getOrCreateState(tokenDoc, plan), plan),
+      );
       await this.ui.upsertTracker(tokenDoc);
     });
   }
@@ -142,7 +154,10 @@ export class HazardRunner {
   async reset(tokenDoc) {
     return this.#enqueue(tokenDoc, async () => {
       const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
-      await this.store.setState(tokenDoc, Engine.reset(this.store.getOrCreateState(tokenDoc, plan), plan));
+      await this.store.setState(
+        tokenDoc,
+        Engine.reset(this.store.getOrCreateState(tokenDoc, plan), plan),
+      );
       await this.ui.upsertTracker(tokenDoc);
     });
   }
@@ -151,8 +166,12 @@ export class HazardRunner {
     const { events, plan } = (await this.#enqueue(tokenDoc, async () => {
       const { plan } = this.store.getOrDraftPlan(tokenDoc.actor);
       const state = this.store.getOrCreateState(tokenDoc, plan);
-      const inst = state.instances.find((i) => Engine.instanceKey(i.componentId, i.index) === instanceKey);
-      const disable = plan.components.find((c) => c.id === inst?.componentId)?.disables.find((d) => d.id === disableId);
+      const inst = state.instances.find(
+        (i) => Engine.instanceKey(i.componentId, i.index) === instanceKey,
+      );
+      const disable = plan.components
+        .find((c) => c.id === inst?.componentId)
+        ?.disables.find((d) => d.id === disableId);
       if (!inst || !disable) return null;
       const need = disable.successesNeeded ?? 1;
       const have = inst.progress[disableId] ?? 0;

@@ -34,7 +34,12 @@ function normalize(state) {
 }
 
 export function createInitialState(plan) {
-  return { version: STATE_VERSION, status: STATUS.ARMED, instances: buildInstances(plan), history: [] };
+  return {
+    version: STATE_VERSION,
+    status: STATUS.ARMED,
+    instances: buildInstances(plan),
+    history: [],
+  };
 }
 
 export function syncStateToPlan(state, plan) {
@@ -67,7 +72,11 @@ function revertEntry(state, plan, entry) {
   const inst = state.instances.find((i) => keyOf(i) === entry.instanceKey);
   if (inst) {
     if (entry.kind === 'result') {
-      if (entry.delta) inst.progress[entry.disableId] = Math.max(0, (inst.progress[entry.disableId] ?? 0) - entry.delta);
+      if (entry.delta)
+        inst.progress[entry.disableId] = Math.max(
+          0,
+          (inst.progress[entry.disableId] ?? 0) - entry.delta,
+        );
       if (entry.disabledSet) {
         const comp = findComponent(plan, inst.componentId);
         const meets = (comp?.disables ?? []).some((d) => (inst.progress[d.id] ?? 0) >= needOf(d));
@@ -75,12 +84,16 @@ function revertEntry(state, plan, entry) {
       }
     } else {
       if (entry.disableId && entry.progressDelta) {
-        inst.progress[entry.disableId] = Math.max(0, (inst.progress[entry.disableId] ?? 0) - entry.progressDelta);
+        inst.progress[entry.disableId] = Math.max(
+          0,
+          (inst.progress[entry.disableId] ?? 0) - entry.progressDelta,
+        );
       }
       if (entry.disabledChange) inst.disabled = entry.disabledChange.from;
     }
   }
-  if (entry.statusChange && state.status === entry.statusChange.to) state.status = entry.statusChange.from;
+  if (entry.statusChange && state.status === entry.statusChange.to)
+    state.status = entry.statusChange.from;
 }
 
 export function applyResult(state, plan, r) {
@@ -103,19 +116,31 @@ export function applyResult(state, plan, r) {
   }
   const base = reverted ? next : state;
   const inst = next.instances.find((i) => keyOf(i) === r.instanceKey);
-  if (!inst) return { state: base, events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: r.instanceKey }] };
+  if (!inst)
+    return {
+      state: base,
+      events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: r.instanceKey }],
+    };
   if (inst.disabled) {
-    return { state: base, events: [{ type: 'ignored', reason: 'instance-disabled', instanceKey: r.instanceKey }] };
+    return {
+      state: base,
+      events: [{ type: 'ignored', reason: 'instance-disabled', instanceKey: r.instanceKey }],
+    };
   }
   const disable = findDisable(plan, inst.componentId, r.disableId);
-  if (!disable) return { state: base, events: [{ type: 'ignored', reason: 'unknown-disable', instanceKey: r.instanceKey }] };
+  if (!disable)
+    return {
+      state: base,
+      events: [{ type: 'ignored', reason: 'unknown-disable', instanceKey: r.instanceKey }],
+    };
 
   const prevStatus = next.status;
   const events = [];
   let delta = 0;
   let disabledSet = false;
   if (r.degree === DEGREE.CRIT_FAIL) {
-    if (next.status === STATUS.ARMED || next.status === STATUS.RESET) next.status = STATUS.TRIGGERED;
+    if (next.status === STATUS.ARMED || next.status === STATUS.RESET)
+      next.status = STATUS.TRIGGERED;
     events.push({ type: 'hazardTriggered', instanceKey: r.instanceKey });
   } else {
     const add = r.degree === DEGREE.CRIT_SUCCESS ? 2 : r.degree === DEGREE.SUCCESS ? 1 : 0;
@@ -124,7 +149,12 @@ export function applyResult(state, plan, r) {
     const after = Math.min(need, before + add);
     inst.progress[r.disableId] = after;
     delta = after - before;
-    events.push({ type: 'progress', instanceKey: r.instanceKey, disableId: r.disableId, value: after });
+    events.push({
+      type: 'progress',
+      instanceKey: r.instanceKey,
+      disableId: r.disableId,
+      value: after,
+    });
     if (after >= need) {
       inst.disabled = true;
       disabledSet = true;
@@ -132,7 +162,8 @@ export function applyResult(state, plan, r) {
     }
   }
   normalize(next);
-  if (next.status === STATUS.DISABLED && prevStatus !== STATUS.DISABLED) events.push({ type: 'hazardDisabled' });
+  if (next.status === STATUS.DISABLED && prevStatus !== STATUS.DISABLED)
+    events.push({ type: 'hazardDisabled' });
   next.history.push({
     kind: 'result',
     instanceKey: r.instanceKey,
@@ -150,8 +181,10 @@ export function applyResult(state, plan, r) {
 
 export function override(state, plan, { instanceKey: key, disableId, progress, disabled }) {
   const inst0 = state.instances.find((i) => keyOf(i) === key);
-  if (!inst0) return { state, events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: key }] };
-  const disable = disableId !== undefined ? findDisable(plan, inst0.componentId, disableId) : undefined;
+  if (!inst0)
+    return { state, events: [{ type: 'ignored', reason: 'unknown-instance', instanceKey: key }] };
+  const disable =
+    disableId !== undefined ? findDisable(plan, inst0.componentId, disableId) : undefined;
   if (disableId !== undefined && !disable) {
     return { state, events: [{ type: 'ignored', reason: 'unknown-disable', instanceKey: key }] };
   }
@@ -182,7 +215,8 @@ export function override(state, plan, { instanceKey: key, disableId, progress, d
   normalize(next);
   if (next.status !== prevStatus) entry.statusChange = { from: prevStatus, to: next.status };
   const events = [];
-  if (next.status === STATUS.DISABLED && prevStatus !== STATUS.DISABLED) events.push({ type: 'hazardDisabled' });
+  if (next.status === STATUS.DISABLED && prevStatus !== STATUS.DISABLED)
+    events.push({ type: 'hazardDisabled' });
   next.history.push(entry);
   return { state: next, events };
 }

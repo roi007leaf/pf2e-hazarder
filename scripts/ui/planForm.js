@@ -2,13 +2,21 @@ const int = (v) => {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) ? n : null;
 };
-const list = (obj) => (Array.isArray(obj) ? obj : Object.keys(obj ?? {}).sort((a, b) => a - b).map((k) => obj[k]));
+const list = (obj) =>
+  Array.isArray(obj)
+    ? obj
+    : Object.keys(obj ?? {})
+        .sort((a, b) => a - b)
+        .map((k) => obj[k]);
 
 export function nextId(prefix, items) {
   let max = 0;
   for (const it of items ?? []) {
     const id = String(it?.id ?? '');
-    const n = id.startsWith(prefix) && /^[0-9]+$/.test(id.slice(prefix.length)) ? Number(id.slice(prefix.length)) : 0;
+    const n =
+      id.startsWith(prefix) && /^[0-9]+$/.test(id.slice(prefix.length))
+        ? Number(id.slice(prefix.length))
+        : 0;
     max = Math.max(max, n);
   }
   return `${prefix}${max + 1}`;

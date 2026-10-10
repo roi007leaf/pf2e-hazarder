@@ -8,7 +8,9 @@ export function createRunner() {
   return new HazardRunner({
     getCandidates: () => defaultCandidates(store),
     resolveToken: (id) =>
-      canvas.scene?.tokens.get(id) ?? game.combat?.combatants.find((c) => c.tokenId === id)?.token ?? null,
+      canvas.scene?.tokens.get(id) ??
+      game.combat?.combatants.find((c) => c.tokenId === id)?.token ??
+      null,
     store,
     ui: { upsertTracker, showTriggered, notify: (t) => ui.notifications.info(t) },
     isWriter: () => !!game.users.activeGM?.isSelf,

@@ -15,7 +15,9 @@ export function parseTag(options = []) {
 
 export function extractCheck(context = {}) {
   const options = Array.isArray(context.options) ? context.options : [];
-  const stat = options.find((o) => o.startsWith('check:statistic:') && !o.startsWith('check:statistic:base:'));
+  const stat = options.find(
+    (o) => o.startsWith('check:statistic:') && !o.startsWith('check:statistic:base:'),
+  );
   const dc = context.dc?.value;
   return {
     statistic: stat ? stat.slice('check:statistic:'.length) : null,

@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+artifacts/
+package-lock.json
+tests/fixtures/
+.superpowers/
+# Prettier glimmer parser rejects Handlebars blocks inside attributes.
+templates/*.hbs
