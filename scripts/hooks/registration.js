@@ -4,7 +4,7 @@ import { getSystemFlags } from '../systemCompat.js';
 import { baseActor, getOrDraftPlan, getPlan, getState } from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
-import { postTurnCard } from '../ui/TurnCard.js';
+import { findStrike, postTurnCard } from '../ui/TurnCard.js';
 import { isHazardTurn, shouldPromptForPlan, shouldSkipTurn } from './predicates.js';
 
 async function confirmReview(actor) {
@@ -97,6 +97,12 @@ async function onCardClick(runner, event) {
   const tokenDoc = tokenUuid ? await fromUuid(tokenUuid) : null;
   if (!tokenDoc) return;
   if (action === 'item') return tokenDoc.actor?.items.get(el.dataset.itemId)?.toMessage();
+  if (action === 'strike' || action === 'strike-damage' || action === 'strike-critical') {
+    const strike = findStrike(tokenDoc.actor, el.dataset.itemId);
+    if (!strike) return;
+    if (action === 'strike') return strike.variants?.[Number(el.dataset.variant)]?.roll({ event });
+    return action === 'strike-damage' ? strike.damage?.({ event }) : strike.critical?.({ event });
+  }
   if (!game.user.isGM) return;
   if (!runner.isWriter()) {
     ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Errors.NotActiveGM'));

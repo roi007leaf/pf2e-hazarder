@@ -1,29 +1,62 @@
-<div class="hazarder-card hz-tracker" data-token-uuid="{{tokenUuid}}">
-  <h3>{{title}} <small>({{statusLabel}})</small></h3>
-  {{#if empty}}<p>{{localize "PF2E_HAZARDER.Tracker.NoDisables"}}</p>{{/if}}
+<div class="hazarder-card hz-tracker hz-status-{{status}}" data-token-uuid="{{tokenUuid}}">
+  <header class="hz-header">
+    <span class="hz-header-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+    <span class="hz-header-name">{{name}}</span>
+    <span class="hz-badge">{{statusLabel}}</span>
+  </header>
+  {{#if actions}}
+    <div class="hz-pool" data-tooltip="{{actions.remaining}} / {{actions.total}}">
+      {{#each actions.pips}}<span class="hz-action-pip {{#if spent}}spent{{/if}}"></span>{{/each}}
+    </div>
+  {{/if}}
+  {{#if empty}}<p class="hz-empty">{{localize "PF2E_HAZARDER.Tracker.NoDisables"}}</p>{{/if}}
   {{#each components}}
-    <div class="hz-component">
+    <section class="hz-component">
+      {{#if showHeading}}<h4 class="hz-component-name">{{name}}</h4>{{/if}}
       {{#each instances}}
         <div class="hz-instance {{#if disabled}}disabled{{/if}}" data-instance-key="{{key}}">
-          <strong>{{label}}</strong>
+          {{#if showLabel}}
+            <div class="hz-instance-label">
+              {{#if disabled}}<i class="fa-solid fa-check"></i>{{/if}}
+              {{label}}
+            </div>
+          {{else if disabled}}
+            <div class="hz-instance-label"><i class="fa-solid fa-check"></i> {{localize "PF2E_HAZARDER.Status.disabled"}}</div>
+          {{/if}}
           {{#each options}}
-            <span class="hz-option">
-              {{#each pips}}<span class="hz-pip {{#if filled}}filled{{/if}}" data-hz-action="pip" data-instance-key="{{../../key}}" data-disable-id="{{../disableId}}"></span>{{/each}}
+            <div class="hz-option">
               {{#unless ../disabled}}
-                <button type="button" data-hz-action="disable" data-instance-key="{{../key}}" data-disable-id="{{disableId}}">{{label}} ({{skill}}{{#if dcText}}<span class="hz-dc"> {{dcText}}</span>{{/if}})</button>
+                <button type="button" class="hz-roll" data-hz-action="disable" data-instance-key="{{../key}}" data-disable-id="{{disableId}}">
+                  <i class="fa-solid fa-dice-d20"></i>
+                  <span class="hz-roll-text">
+                    <span class="hz-skill">{{skillLabel}}</span>
+                    {{#if extraLabel}}<span class="hz-extra">{{extraLabel}}</span>{{/if}}
+                  </span>
+                  {{#if dcText}}<span class="hz-dc">{{dcText}}</span>{{/if}}
+                </button>
+              {{else}}
+                <span class="hz-roll hz-roll-done">
+                  <span class="hz-skill">{{skillLabel}}</span>
+                  {{#if dcText}}<span class="hz-dc">{{dcText}}</span>{{/if}}
+                </span>
               {{/unless}}
-            </span>
+              <span class="hz-pips" data-tooltip="{{have}} / {{need}}">
+                {{#each pips}}<span class="hz-pip {{#if filled}}filled{{/if}}" data-hz-action="pip" data-instance-key="{{../../key}}" data-disable-id="{{../disableId}}"></span>{{/each}}
+              </span>
+            </div>
           {{/each}}
         </div>
       {{/each}}
-      {{#if counteract}}<p class="hz-counteract">{{#if counteractUuid}}@UUID[{{counteractUuid}}]{ {{counteract}} }{{else}}{{counteract}}{{/if}}</p>{{/if}}
-    </div>
+      {{#if counteract}}
+        <p class="hz-counteract"><i class="fa-solid fa-wand-sparkles"></i> {{#if counteractUuid}}@UUID[{{counteractUuid}}]{ {{counteract}} }{{else}}{{counteract}}{{/if}}</p>
+      {{/if}}
+    </section>
   {{/each}}
   {{#if isGM}}
-    <div class="hz-gm">
-      <button type="button" data-hz-action="undo">{{localize "PF2E_HAZARDER.Tracker.Undo"}}</button>
-      <button type="button" data-hz-action="reset">{{localize "PF2E_HAZARDER.Tracker.Reset"}}</button>
-      <button type="button" data-hz-action="plan">{{localize "PF2E_HAZARDER.Tracker.EditPlan"}}</button>
-    </div>
+    <footer class="hz-gm">
+      <button type="button" class="hz-icon-btn" data-hz-action="undo" data-tooltip="{{localize 'PF2E_HAZARDER.Tracker.Undo'}}" aria-label="{{localize 'PF2E_HAZARDER.Tracker.Undo'}}"><i class="fa-solid fa-rotate-left"></i></button>
+      <button type="button" class="hz-icon-btn" data-hz-action="reset" data-tooltip="{{localize 'PF2E_HAZARDER.Tracker.Reset'}}" aria-label="{{localize 'PF2E_HAZARDER.Tracker.Reset'}}"><i class="fa-solid fa-arrows-rotate"></i></button>
+      <button type="button" class="hz-icon-btn" data-hz-action="plan" data-tooltip="{{localize 'PF2E_HAZARDER.Tracker.EditPlan'}}" aria-label="{{localize 'PF2E_HAZARDER.Tracker.EditPlan'}}"><i class="fa-solid fa-pen-to-square"></i></button>
+    </footer>
   {{/if}}
 </div>

@@ -36,7 +36,9 @@
       "Title": "{name}'s turn",
       "Actions": "Actions: {remaining} / {total}",
       "DisabledNote": "{count} disabled",
-      "Flavor": "{name} acts!"
+      "Flavor": "{name} acts!",
+      "Damage": "Damage",
+      "Critical": "Critical"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",

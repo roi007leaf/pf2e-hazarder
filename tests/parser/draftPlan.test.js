@@ -118,6 +118,21 @@ test('reaction and routine items', () => {
   expect(plan.routineItemIds).toEqual(['m1', 'a1']);
 });
 
+test('passive abilities are not routine items', () => {
+  const { plan } = draftPlan(
+    hazard({ routine: '(3 actions)' }, [
+      {
+        _id: 'p1',
+        type: 'action',
+        name: 'Void Healing',
+        system: { actionType: { value: 'passive' } },
+      },
+      { _id: 'm1', type: 'melee', name: 'Ghostly Attack', system: { actionType: { value: null } } },
+    ]),
+  );
+  expect(plan.routineItemIds).toEqual(['m1']);
+});
+
 test('defaults and reset text', () => {
   const { plan } = draftPlan(
     hazard({ routine: '(1 action)', reset: '<p>Resets after 1 minute.</p>' }),

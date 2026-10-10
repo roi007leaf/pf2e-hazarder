@@ -4,6 +4,29 @@ import { buildTurnView } from './turnView.js';
 
 const render = (path, data) => foundry.applications.handlebars.renderTemplate(path, data);
 
+// Hazard Strikes can't go through item.toMessage(): pf2e routes melee items through its action
+// macro, which only accepts characters and NPCs. Use the actor's prepared strike actions instead.
+export function findStrike(actor, itemId) {
+  return actor?.system?.actions?.find((a) => a.item?.id === itemId) ?? null;
+}
+
+function describeItem(actor, item) {
+  const base = { id: item.id, name: item.name };
+  if (item.type === 'action' && item.system?.actionType?.value === 'passive') {
+    return { ...base, passive: true };
+  }
+  if (item.type !== 'melee') return base;
+  const strike = findStrike(actor, item.id);
+  if (!strike) return base;
+  return {
+    ...base,
+    strike: {
+      variants: (strike.variants ?? []).map((v) => v.label),
+      hasDamage: typeof strike.damage === 'function',
+    },
+  };
+}
+
 export async function postTurnCard(combatant) {
   const tokenDoc = combatant.token;
   const actor = combatant.actor;
@@ -19,7 +42,7 @@ export async function postTurnCard(combatant) {
     plan,
     state,
     routineHtml,
-    items: actor.items.map((i) => ({ id: i.id, name: i.name })),
+    items: actor.items.map((i) => describeItem(actor, i)),
   });
   const content = await render(`modules/${MODULE_ID}/templates/turn-card.hbs`, {
     ...view,

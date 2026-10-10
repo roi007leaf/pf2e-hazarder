@@ -131,8 +131,9 @@ export function draftPlan(source) {
     const items = Array.isArray(source.items) ? source.items : [];
     const isReaction = (i) => i.type === 'action' && i.system?.actionType?.value === 'reaction';
     plan.reactionItemId = items.find(isReaction)?._id ?? null;
+    const isPassive = (i) => i.type === 'action' && i.system?.actionType?.value === 'passive';
     plan.routineItemIds = items
-      .filter((i) => (i.type === 'melee' || i.type === 'action') && !isReaction(i))
+      .filter((i) => (i.type === 'melee' || i.type === 'action') && !isReaction(i) && !isPassive(i))
       .map((i) => i._id);
     plan.resetText = stripHtml(details.reset);
     return { plan, warnings };

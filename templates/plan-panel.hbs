@@ -1,58 +1,92 @@
 <section class="hazarder-plan-body">
   {{#if warnings.length}}
-    <fieldset class="hz-warnings">
-      <legend>{{localize "PF2E_HAZARDER.Plan.Warnings"}}</legend>
-      {{#each warnings}}<p class="hz-warning">{{localize this}}</p>{{/each}}
-    </fieldset>
-  {{/if}}
-  <div class="form-group">
-    <label>{{localize "PF2E_HAZARDER.Plan.ActionsPerTurn"}}</label>
-    <input type="number" name="actionsPerTurn" value="{{plan.actionsPerTurn}}" min="0" />
-  </div>
-  <div class="form-group">
-    <label>{{localize "PF2E_HAZARDER.Plan.Reaction"}}</label>
-    <select name="reactionItemId">
-      <option value=""></option>
-      {{#each items}}<option value="{{id}}" {{#if (eq id ../plan.reactionItemId)}}selected{{/if}}>{{name}}</option>{{/each}}
-    </select>
-  </div>
-  {{#if routineItems.length}}
-    <fieldset class="hz-routine-items">
-      <legend>{{localize "PF2E_HAZARDER.Plan.RoutineItems"}}</legend>
-      {{#each routineItems}}
-        <label class="checkbox"><input type="checkbox" name="routineItemIds.{{id}}" {{#if checked}}checked{{/if}} /> {{name}}</label>
-      {{/each}}
-    </fieldset>
-  {{/if}}
-  {{#each plan.components as |c ci|}}
-    <fieldset class="hz-component">
-      <legend>
-        {{localize "PF2E_HAZARDER.Plan.Component"}} {{c.id}}
-        <button type="button" class="hz-remove" data-action="removeComponent" data-component="{{ci}}" data-tooltip="{{localize 'PF2E_HAZARDER.Plan.RemoveComponent'}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.RemoveComponent'}}"><i class="fa-solid fa-trash"></i></button>
-      </legend>
-      <input type="hidden" name="components.{{ci}}.id" value="{{c.id}}" />
-      <div class="form-group"><label>{{localize "PF2E_HAZARDER.Plan.Component"}}</label><input type="text" name="components.{{ci}}.name" value="{{c.name}}" /></div>
-      <div class="form-group"><label>{{localize "PF2E_HAZARDER.Plan.Count"}}</label><input type="number" min="1" name="components.{{ci}}.count" value="{{c.count}}" /></div>
-      <div class="form-group"><label>{{localize "PF2E_HAZARDER.Plan.ActionsEach"}}</label><input type="number" min="0" name="components.{{ci}}.actionsEach" value="{{c.actionsEach}}" /></div>
-      {{#each c.disables as |d di|}}
-        <div class="form-group hz-disable">
-          <input type="hidden" name="components.{{ci}}.disables.{{di}}.id" value="{{d.id}}" />
-          <input type="text" placeholder="{{localize 'PF2E_HAZARDER.Plan.Skill'}}" name="components.{{ci}}.disables.{{di}}.skill" value="{{d.skill}}" />
-          <input type="number" placeholder="{{localize 'PF2E_HAZARDER.Plan.DC'}}" name="components.{{ci}}.disables.{{di}}.dc" value="{{d.dc}}" />
-          <input type="text" placeholder="{{localize 'PF2E_HAZARDER.Plan.Label'}}" name="components.{{ci}}.disables.{{di}}.label" value="{{d.label}}" />
-          <input type="number" min="1" title="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}" name="components.{{ci}}.disables.{{di}}.successesNeeded" value="{{d.successesNeeded}}" />
-          <button type="button" class="hz-remove" data-action="removeDisable" data-component="{{ci}}" data-disable="{{di}}" data-tooltip="{{localize 'PF2E_HAZARDER.Plan.RemoveDisable'}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.RemoveDisable'}}"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      {{/each}}
-      <button type="button" data-action="addDisable" data-component="{{ci}}">{{localize "PF2E_HAZARDER.Plan.AddDisable"}}</button>
-      <div class="form-group hz-counteract">
-        <label>{{localize "PF2E_HAZARDER.Plan.Counteract"}}</label>
-        <input type="text" placeholder="{{localize 'PF2E_HAZARDER.Plan.CounteractSpell'}}" name="components.{{ci}}.counteract.name" value="{{c.counteract.name}}" />
-        <input type="number" min="0" placeholder="{{localize 'PF2E_HAZARDER.Plan.CounteractRank'}}" name="components.{{ci}}.counteract.rank" value="{{c.counteract.rank}}" />
-        <input type="number" placeholder="{{localize 'PF2E_HAZARDER.Plan.DC'}}" name="components.{{ci}}.counteract.dc" value="{{c.counteract.dc}}" />
+    <div class="hz-banner" role="status">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>
+        <strong>{{localize "PF2E_HAZARDER.Plan.Warnings"}}</strong>
+        <ul>{{#each warnings}}<li>{{localize this}}</li>{{/each}}</ul>
       </div>
-    </fieldset>
-  {{/each}}
-  <button type="button" data-action="addComponent">{{localize "PF2E_HAZARDER.Plan.AddComponent"}}</button>
-  <footer class="form-footer"><button type="submit">{{localize "PF2E_HAZARDER.Plan.Save"}}</button></footer>
+    </div>
+  {{/if}}
+
+  <div class="hz-panel-scroll">
+    <div class="hz-general">
+      <label class="hz-field">
+        <span>{{localize "PF2E_HAZARDER.Plan.ActionsPerTurn"}}</span>
+        <input type="number" name="actionsPerTurn" value="{{plan.actionsPerTurn}}" min="0" />
+      </label>
+      <label class="hz-field">
+        <span>{{localize "PF2E_HAZARDER.Plan.Reaction"}}</span>
+        <select name="reactionItemId">
+          <option value=""></option>
+          {{#each items}}<option value="{{id}}" {{#if (eq id ../plan.reactionItemId)}}selected{{/if}}>{{name}}</option>{{/each}}
+        </select>
+      </label>
+    </div>
+
+    {{#if routineItems.length}}
+      <div class="hz-block">
+        <h4 class="hz-block-title">{{localize "PF2E_HAZARDER.Plan.RoutineItems"}}</h4>
+        <div class="hz-checks">
+          {{#each routineItems}}
+            <label class="hz-check"><input type="checkbox" name="routineItemIds.{{id}}" {{#if checked}}checked{{/if}} /> {{name}}</label>
+          {{/each}}
+        </div>
+      </div>
+    {{/if}}
+
+    {{#each plan.components as |c ci|}}
+      <div class="hz-block hz-component-card">
+        <input type="hidden" name="components.{{ci}}.id" value="{{c.id}}" />
+        <div class="hz-component-head">
+          <input type="text" class="hz-component-name" placeholder="{{localize 'PF2E_HAZARDER.Plan.Component'}}" name="components.{{ci}}.name" value="{{c.name}}" />
+          <button type="button" class="hz-icon-btn hz-danger" data-action="removeComponent" data-component="{{ci}}" data-tooltip="{{localize 'PF2E_HAZARDER.Plan.RemoveComponent'}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.RemoveComponent'}}"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        <div class="hz-general">
+          <label class="hz-field">
+            <span>{{localize "PF2E_HAZARDER.Plan.Count"}}</span>
+            <input type="number" min="1" name="components.{{ci}}.count" value="{{c.count}}" />
+          </label>
+          <label class="hz-field">
+            <span>{{localize "PF2E_HAZARDER.Plan.ActionsEach"}}</span>
+            <input type="number" min="0" name="components.{{ci}}.actionsEach" value="{{c.actionsEach}}" />
+          </label>
+        </div>
+
+        <div class="hz-grid">
+          <div class="hz-grid-head">
+            <span>{{localize "PF2E_HAZARDER.Plan.Skill"}}</span>
+            <span>{{localize "PF2E_HAZARDER.Plan.DC"}}</span>
+            <span>{{localize "PF2E_HAZARDER.Plan.Label"}}</span>
+            <span data-tooltip="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}"><i class="fa-solid fa-check-double"></i></span>
+            <span></span>
+          </div>
+          {{#each c.disables as |d di|}}
+            <div class="hz-grid-row">
+              <input type="hidden" name="components.{{ci}}.disables.{{di}}.id" value="{{d.id}}" />
+              <input type="text" name="components.{{ci}}.disables.{{di}}.skill" value="{{d.skill}}" placeholder="thievery" />
+              <input type="number" name="components.{{ci}}.disables.{{di}}.dc" value="{{d.dc}}" />
+              <input type="text" name="components.{{ci}}.disables.{{di}}.label" value="{{d.label}}" />
+              <input type="number" min="1" name="components.{{ci}}.disables.{{di}}.successesNeeded" value="{{d.successesNeeded}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}" />
+              <button type="button" class="hz-icon-btn hz-danger" data-action="removeDisable" data-component="{{ci}}" data-disable="{{di}}" data-tooltip="{{localize 'PF2E_HAZARDER.Plan.RemoveDisable'}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.RemoveDisable'}}"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          {{/each}}
+          <button type="button" class="hz-add" data-action="addDisable" data-component="{{ci}}"><i class="fa-solid fa-plus"></i> {{localize "PF2E_HAZARDER.Plan.AddDisable"}}</button>
+        </div>
+
+        <div class="hz-counteract-row">
+          <span class="hz-counteract-label"><i class="fa-solid fa-wand-sparkles"></i> {{localize "PF2E_HAZARDER.Plan.Counteract"}}</span>
+          <input type="text" placeholder="{{localize 'PF2E_HAZARDER.Plan.CounteractSpell'}}" name="components.{{ci}}.counteract.name" value="{{c.counteract.name}}" />
+          <input type="number" min="0" placeholder="{{localize 'PF2E_HAZARDER.Plan.CounteractRank'}}" name="components.{{ci}}.counteract.rank" value="{{c.counteract.rank}}" />
+          <input type="number" placeholder="{{localize 'PF2E_HAZARDER.Plan.DC'}}" name="components.{{ci}}.counteract.dc" value="{{c.counteract.dc}}" />
+        </div>
+      </div>
+    {{/each}}
+
+    <button type="button" class="hz-add hz-add-component" data-action="addComponent"><i class="fa-solid fa-plus"></i> {{localize "PF2E_HAZARDER.Plan.AddComponent"}}</button>
+  </div>
+
+  <footer class="hz-panel-footer">
+    <button type="submit" class="hz-primary"><i class="fa-solid fa-floppy-disk"></i> {{localize "PF2E_HAZARDER.Plan.Save"}}</button>
+  </footer>
 </section>

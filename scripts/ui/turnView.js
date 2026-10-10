@@ -5,6 +5,9 @@ export function buildTurnView({ name, plan, state, routineHtml, items }) {
   const remaining = actionsRemaining(state, plan) ?? 0;
   const disabled = disabledCount(state);
   const byId = new Map(items.map((i) => [i.id, i]));
+  const routine = (plan.routineItemIds ?? [])
+    .map((id) => byId.get(id))
+    .filter((i) => i && !i.passive);
   return {
     title: game.i18n.format('PF2E_HAZARDER.Turn.Title', { name }),
     total,
@@ -14,6 +17,16 @@ export function buildTurnView({ name, plan, state, routineHtml, items }) {
       ? game.i18n.format('PF2E_HAZARDER.Turn.DisabledNote', { count: disabled })
       : null,
     routineHtml,
-    items: (plan.routineItemIds ?? []).map((id) => byId.get(id)).filter(Boolean),
+    strikes: routine
+      .filter((i) => i.strike)
+      .map((i) => ({
+        id: i.id,
+        name: i.name,
+        variants: i.strike.variants.map((label, index) => ({ index, label })),
+        hasDamage: i.strike.hasDamage,
+      })),
+    items: routine
+      .filter((i) => !i.strike)
+      .map(({ id, name: itemName }) => ({ id, name: itemName })),
   };
 }

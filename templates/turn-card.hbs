@@ -1,16 +1,31 @@
 <div class="hazarder-card hz-turn" data-token-uuid="{{tokenUuid}}">
-  <h3>{{title}}</h3>
+  <header class="hz-header">
+    <span class="hz-header-icon"><i class="fa-solid fa-hourglass-half"></i></span>
+    <span class="hz-header-name">{{title}}</span>
+    {{#if total}}<span class="hz-badge">{{remaining}} / {{total}}</span>{{/if}}
+  </header>
   {{#if total}}
-    <div class="hz-actions">
-      {{#each pips}}<span class="hz-pip filled {{#if spent}}spent{{/if}}"></span>{{/each}}
-      <span>{{remaining}} / {{total}}</span>
-      {{#if disabledNote}}<em>({{disabledNote}})</em>{{/if}}
+    <div class="hz-pool">
+      {{#each pips}}<span class="hz-action-pip {{#if spent}}spent{{/if}}"></span>{{/each}}
+      {{#if disabledNote}}<span class="hz-pool-note">{{disabledNote}}</span>{{/if}}
     </div>
   {{/if}}
   <div class="hz-routine">{{{routineHtml}}}</div>
+  {{#each strikes}}
+    <div class="hz-strike">
+      <span class="hz-strike-name"><i class="fa-solid fa-hand-fist"></i> {{name}}</span>
+      <div class="hz-strike-buttons">
+        {{#each variants}}<button type="button" class="hz-chip hz-attack" data-hz-action="strike" data-item-id="{{../id}}" data-variant="{{index}}" data-token-uuid="{{../../tokenUuid}}">{{label}}</button>{{/each}}
+        {{#if hasDamage}}
+          <button type="button" class="hz-chip hz-damage" data-hz-action="strike-damage" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}">{{localize "PF2E_HAZARDER.Turn.Damage"}}</button>
+          <button type="button" class="hz-chip hz-damage" data-hz-action="strike-critical" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}">{{localize "PF2E_HAZARDER.Turn.Critical"}}</button>
+        {{/if}}
+      </div>
+    </div>
+  {{/each}}
   {{#if items.length}}
-    <div class="hz-items">
-      {{#each items}}<button type="button" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}">{{name}}</button>{{/each}}
+    <div class="hz-chips">
+      {{#each items}}<button type="button" class="hz-chip" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}"><i class="fa-solid fa-bolt"></i> {{name}}</button>{{/each}}
     </div>
   {{/if}}
 </div>

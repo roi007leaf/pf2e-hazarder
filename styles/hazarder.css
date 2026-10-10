@@ -1,34 +1,636 @@
-.hazarder-card .hz-component {
-  margin: 4px 0;
+/*
+ * PF2e Hazarder styles.
+ * Palette: hazard-signage amber + charcoal, one colour per hazard status.
+ * Neutral tones derive from currentColor so cards read on PF2e parchment and dark themes alike.
+ */
+
+.hazarder-card,
+.hazarder-plan {
+  --hz-amber: #e8a317;
+  --hz-amber-deep: #b97c06;
+  --hz-charcoal: #26262c;
+  --hz-on-accent: #1d1b16;
+  --hz-armed: #3d78a8;
+  --hz-active: #e8a317;
+  --hz-triggered: #d0402f;
+  --hz-disabled: #3f9a6b;
+  --hz-reset: #7d7f8c;
+  --hz-line: color-mix(in srgb, currentColor 18%, transparent);
+  --hz-soft: color-mix(in srgb, currentColor 7%, transparent);
+  --hz-muted: color-mix(in srgb, currentColor 62%, transparent);
+  --hz-radius: 6px;
+  --hz-status: var(--hz-active);
 }
+
+/* ---------- Chat cards ---------- */
+
+.hazarder-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-13, 13px);
+  line-height: 1.35;
+}
+
+.hazarder-card.hz-status-armed {
+  --hz-status: var(--hz-armed);
+}
+.hazarder-card.hz-status-active {
+  --hz-status: var(--hz-active);
+}
+.hazarder-card.hz-status-triggered {
+  --hz-status: var(--hz-triggered);
+}
+.hazarder-card.hz-status-disabled {
+  --hz-status: var(--hz-disabled);
+}
+.hazarder-card.hz-status-reset {
+  --hz-status: var(--hz-reset);
+}
+
+.hazarder-card .hz-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 8px 6px 10px;
+  border-radius: var(--hz-radius);
+  background:
+    linear-gradient(var(--hz-charcoal), var(--hz-charcoal)) padding-box,
+    repeating-linear-gradient(-45deg, var(--hz-amber) 0 6px, var(--hz-charcoal) 6px 12px) border-box;
+  border-left: 6px solid transparent;
+  color: #f4f1ea;
+}
+
+.hazarder-card .hz-header-icon {
+  color: var(--hz-amber);
+  flex: 0 0 auto;
+}
+
+.hazarder-card .hz-header-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+  font-size: var(--font-size-14, 14px);
+  overflow-wrap: anywhere;
+}
+
+.hazarder-card .hz-badge {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--hz-status);
+  color: var(--hz-on-accent);
+  font-size: var(--font-size-11, 11px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hazarder-card.hz-status-armed .hz-badge,
+.hazarder-card.hz-status-triggered .hz-badge,
+.hazarder-card.hz-status-disabled .hz-badge {
+  color: #fff;
+}
+
+/* Action pool */
+.hazarder-card .hz-pool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.hazarder-card .hz-action-pip {
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  background: var(--hz-amber);
+  box-shadow: inset 0 0 0 1px var(--hz-amber-deep);
+}
+
+.hazarder-card .hz-action-pip.spent {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--hz-line);
+}
+
+.hazarder-card .hz-pool-note {
+  margin-left: 6px;
+  color: var(--hz-muted);
+  font-size: var(--font-size-12, 12px);
+}
+
+/* Components and instances */
+.hazarder-card .hz-component {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hazarder-card .hz-component + .hz-component {
+  padding-top: 6px;
+  border-top: 1px dashed var(--hz-line);
+}
+
+.hazarder-card .hz-component-name {
+  margin: 0;
+  border: none;
+  font-size: var(--font-size-12, 12px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hz-muted);
+}
+
 .hazarder-card .hz-instance {
   display: flex;
+  flex-direction: column;
   gap: 4px;
-  align-items: center;
-  flex-wrap: wrap;
 }
-.hazarder-card .hz-instance.disabled {
-  opacity: 0.5;
+
+.hazarder-card .hz-instance-label {
+  font-weight: 600;
+}
+
+.hazarder-card .hz-instance.disabled .hz-instance-label {
+  color: var(--hz-disabled);
+}
+
+.hazarder-card .hz-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Disable roll button */
+.hazarder-card .hz-roll {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: auto;
+  min-height: 30px;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--hz-line);
+  border-left: 3px solid var(--hz-status);
+  border-radius: var(--hz-radius);
+  background: var(--hz-soft);
+  color: inherit;
+  font-size: var(--font-size-13, 13px);
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.hazarder-card button.hz-roll:hover,
+.hazarder-card button.hz-roll:focus-visible {
+  background: color-mix(in srgb, var(--hz-amber) 22%, transparent);
+  border-color: var(--hz-amber);
+  box-shadow: none;
+  outline: none;
+}
+
+.hazarder-card .hz-roll > i {
+  color: var(--hz-amber-deep);
+}
+
+.hazarder-card .hz-roll-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hazarder-card .hz-skill {
+  font-weight: 700;
+}
+
+.hazarder-card .hz-extra {
+  color: var(--hz-muted);
+  font-size: var(--font-size-12, 12px);
+  overflow-wrap: anywhere;
+}
+
+.hazarder-card .hz-dc {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--hz-charcoal);
+  color: #f4f1ea;
+  font-size: var(--font-size-11, 11px);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hazarder-card .hz-roll-done {
+  cursor: default;
+  opacity: 0.55;
+  border-left-color: var(--hz-disabled);
+}
+
+/* Success pips */
+.hazarder-card .hz-pips {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 3px;
+}
+
+.hazarder-card .hz-pip {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--hz-disabled);
+  background: transparent;
+}
+
+.hazarder-card .hz-pip.filled {
+  background: var(--hz-disabled);
+}
+
+.hazarder-card .hz-pip[data-hz-action] {
+  cursor: pointer;
+}
+
+.hazarder-card .hz-instance.disabled .hz-roll-done .hz-skill {
   text-decoration: line-through;
 }
-.hazarder-card .hz-pip {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1px solid currentColor;
+
+.hazarder-card .hz-counteract,
+.hazarder-card .hz-empty {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: var(--hz-radius);
+  background: var(--hz-soft);
+  font-size: var(--font-size-12, 12px);
 }
-.hazarder-card .hz-pip.filled {
-  background: currentColor;
+
+.hazarder-card .hz-counteract > i {
+  color: var(--hz-armed);
 }
-.hazarder-card .hz-actions .hz-pip.spent {
-  opacity: 0.25;
+
+.hazarder-card .hz-empty {
+  border: 1px dashed var(--hz-line);
+  color: var(--hz-muted);
+  font-style: italic;
 }
-.hazarder-card button {
+
+/* GM toolbar */
+.hazarder-card .hz-gm {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hz-line);
+}
+
+.hazarder-card .hz-icon-btn,
+.hazarder-plan .hz-icon-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--hz-line);
+  border-radius: var(--hz-radius);
+  background: transparent;
+  color: inherit;
+  font-size: var(--font-size-12, 12px);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hazarder-card .hz-icon-btn:hover,
+.hazarder-plan .hz-icon-btn:hover {
+  background: var(--hz-charcoal);
+  border-color: var(--hz-charcoal);
+  color: var(--hz-amber);
+  box-shadow: none;
+}
+
+/* Turn card */
+.hazarder-card .hz-routine {
+  padding: 6px 8px;
+  border-radius: var(--hz-radius);
+  background: var(--hz-soft);
+  border: 1px solid var(--hz-line);
+}
+
+.hazarder-card .hz-routine > :first-child {
+  margin-top: 0;
+}
+
+.hazarder-card .hz-routine > :last-child {
+  margin-bottom: 0;
+}
+
+.hazarder-card .hz-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hazarder-card .hz-chip {
   flex: 0 0 auto;
   width: auto;
-  line-height: 1.4;
+  height: auto;
+  margin: 0;
+  padding: 3px 10px;
+  border: 1px solid var(--hz-amber-deep);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hz-amber) 16%, transparent);
+  color: inherit;
+  font-size: var(--font-size-12, 12px);
+  font-weight: 600;
+  line-height: 1.3;
+  cursor: pointer;
 }
-.hazarder-plan .hz-warning {
-  color: var(--color-level-warning, #c90);
+
+.hazarder-card .hz-chip:hover {
+  background: var(--hz-amber);
+  color: var(--hz-on-accent);
+  box-shadow: none;
+}
+
+.hazarder-card .hz-chip > i {
+  margin-right: 2px;
+}
+
+.hazarder-card .hz-strike {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: var(--hz-radius);
+  border-left: 3px solid var(--hz-triggered);
+  background: var(--hz-soft);
+}
+
+.hazarder-card .hz-strike-name {
+  font-weight: 700;
+}
+
+.hazarder-card .hz-strike-name > i {
+  color: var(--hz-triggered);
+}
+
+.hazarder-card .hz-strike-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hazarder-card .hz-chip.hz-damage {
+  border-color: var(--hz-triggered);
+  background: color-mix(in srgb, var(--hz-triggered) 14%, transparent);
+}
+
+.hazarder-card .hz-chip.hz-damage:hover {
+  background: var(--hz-triggered);
+  color: #fff;
+}
+
+/* Candidate picker / apply-later controls appended to check messages */
+.hazarder-card.hz-picker {
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px dashed var(--hz-amber-deep);
+  border-radius: var(--hz-radius);
+}
+
+.hazarder-card.hz-picker p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.hazarder-card.hz-picker button,
+button.hazarder-card {
+  width: 100%;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--hz-amber-deep);
+  border-radius: var(--hz-radius);
+  background: color-mix(in srgb, var(--hz-amber) 16%, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+
+button.hazarder-card {
+  margin-top: 6px;
+  display: block;
+}
+
+.hazarder-card.hz-picker button:hover,
+button.hazarder-card:hover {
+  background: var(--hz-amber);
+  color: var(--hz-on-accent);
+}
+
+.hazarder-card.hz-picker button:disabled,
+button.hazarder-card:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+/* ---------- Plan panel ---------- */
+
+.hazarder-plan .window-content {
+  padding: 0;
+}
+
+.hazarder-plan .hazarder-plan-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 75vh;
+}
+
+.hazarder-plan .hz-panel-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px;
+  overflow-y: auto;
+}
+
+.hazarder-plan .hz-banner {
+  display: flex;
+  gap: 10px;
+  margin: 10px 12px 0;
+  padding: 8px 10px;
+  border-radius: var(--hz-radius);
+  border-left: 4px solid var(--hz-amber);
+  background: color-mix(in srgb, var(--hz-amber) 15%, transparent);
+}
+
+.hazarder-plan .hz-banner > i {
+  color: var(--hz-amber-deep);
+  margin-top: 2px;
+}
+
+.hazarder-plan .hz-banner ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.hazarder-plan .hz-general {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.hazarder-plan .hz-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hazarder-plan .hz-field > span,
+.hazarder-plan .hz-grid-head,
+.hazarder-plan .hz-block-title,
+.hazarder-plan .hz-counteract-label {
+  font-size: var(--font-size-11, 11px);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hz-muted);
+}
+
+.hazarder-plan .hz-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--hz-line);
+  border-radius: var(--hz-radius);
+  background: var(--hz-soft);
+}
+
+.hazarder-plan .hz-block-title {
+  margin: 0;
+  border: none;
+}
+
+.hazarder-plan .hz-component-card {
+  border-top: 4px solid var(--hz-amber);
+}
+
+.hazarder-plan .hz-component-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.hazarder-plan .hz-component-head .hz-component-name {
+  flex: 1 1 auto;
+  font-weight: 700;
+  font-size: var(--font-size-14, 14px);
+}
+
+.hazarder-plan .hz-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.hazarder-plan .hz-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hazarder-plan .hz-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hazarder-plan .hz-grid-head,
+.hazarder-plan .hz-grid-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 64px minmax(0, 1.6fr) 48px 28px;
+  gap: 4px;
+  align-items: center;
+}
+
+.hazarder-plan .hz-grid-row > input[type='hidden'] {
+  display: none;
+}
+
+.hazarder-plan .hz-counteract-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 64px 64px;
+  gap: 4px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px dashed var(--hz-line);
+}
+
+.hazarder-plan .hz-counteract-label > i {
+  color: var(--hz-armed);
+}
+
+.hazarder-plan .hz-danger:hover {
+  background: var(--hz-triggered);
+  border-color: var(--hz-triggered);
+  color: #fff;
+}
+
+.hazarder-plan .hz-add {
+  align-self: flex-start;
+  width: auto;
+  margin: 0;
+  padding: 3px 10px;
+  border: 1px dashed var(--hz-line);
+  border-radius: var(--hz-radius);
+  background: transparent;
+  color: inherit;
+  font-size: var(--font-size-12, 12px);
+  cursor: pointer;
+}
+
+.hazarder-plan .hz-add:hover {
+  border-style: solid;
+  border-color: var(--hz-amber-deep);
+  background: color-mix(in srgb, var(--hz-amber) 15%, transparent);
+}
+
+.hazarder-plan .hz-add-component {
+  align-self: stretch;
+  padding: 6px;
+}
+
+.hazarder-plan .hz-panel-footer {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-top: 1px solid var(--hz-line);
+  background: var(--hz-soft);
+}
+
+.hazarder-plan .hz-primary {
+  width: 100%;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--hz-amber-deep);
+  border-radius: var(--hz-radius);
+  background: var(--hz-amber);
+  color: var(--hz-on-accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hazarder-plan .hz-primary:hover {
+  background: var(--hz-charcoal);
+  border-color: var(--hz-charcoal);
+  color: var(--hz-amber);
+  box-shadow: none;
 }

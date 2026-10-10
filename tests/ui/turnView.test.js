@@ -37,3 +37,35 @@ test('null actions per turn gives no pips', () => {
   expect(v.pips).toEqual([]);
   expect(v.disabledNote).toBeNull();
 });
+
+test('strikes are split from actions and passives are dropped', () => {
+  const p = { ...plan, routineItemIds: ['m1', 'p1', 'a1'] };
+  const v = buildTurnView({
+    name: 'Endless Struggle',
+    plan: p,
+    state: createInitialState(p),
+    routineHtml: '',
+    items: [
+      {
+        id: 'm1',
+        name: 'Ghostly Attack',
+        strike: { variants: ['+20', '+15', '+10'], hasDamage: true },
+      },
+      { id: 'p1', name: 'Void Healing', passive: true },
+      { id: 'a1', name: 'Spectral Uprising' },
+    ],
+  });
+  expect(v.strikes).toEqual([
+    {
+      id: 'm1',
+      name: 'Ghostly Attack',
+      variants: [
+        { index: 0, label: '+20' },
+        { index: 1, label: '+15' },
+        { index: 2, label: '+10' },
+      ],
+      hasDamage: true,
+    },
+  ]);
+  expect(v.items).toEqual([{ id: 'a1', name: 'Spectral Uprising' }]);
+});
