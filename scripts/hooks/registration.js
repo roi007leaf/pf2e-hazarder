@@ -10,7 +10,14 @@ import {
 } from '../stores/hazardStore.js';
 import { PlanPanel } from '../ui/PlanPanel.js';
 import { rollDisable } from '../ui/TrackerCard.js';
-import { findStrike, postSaveRequest, postTurnCard, spendFromMessage } from '../ui/TurnCard.js';
+import {
+  currentHazardPool,
+  findStrike,
+  postSaveRequest,
+  postTurnCard,
+  spendFromMessage,
+} from '../ui/TurnCard.js';
+import { decorateCombatTracker } from '../ui/combatTrackerPool.js';
 import { decorateTurnCard, nextSpent } from '../ui/turnCardDom.js';
 import { extractSaves } from '../ui/routineParts.js';
 import { buildCheckRequest } from '../ui/checkRequest.js';
@@ -237,6 +244,24 @@ export function registerHooks(runner) {
     }
     await postTurnCard(combat.combatant);
   });
+
+  // Remaining hazard actions next to the hazard's name in the core tracker and PF2e HUD's tracker.
+  const refreshTrackers = foundry.utils.debounce(
+    () => decorateCombatTracker(document.body, currentHazardPool()),
+    50,
+  );
+  Hooks.on('renderApplicationV2', (app, html) => {
+    if (html?.querySelector?.('li.combatant[data-combatant-id]')) {
+      decorateCombatTracker(html, currentHazardPool());
+    }
+  });
+  Hooks.on('updateChatMessage', (message) => {
+    if (message.flags?.[MODULE_ID]?.kind === 'turn') refreshTrackers();
+  });
+  Hooks.on('updateToken', (tokenDoc, changes) => {
+    if (changes.flags?.[MODULE_ID]) refreshTrackers();
+  });
+  Hooks.on('updateCombat', () => refreshTrackers());
 
   Hooks.on('createChatMessage', (message) => {
     runner.handleCheckMessage(message);

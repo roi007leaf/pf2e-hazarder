@@ -69,6 +69,7 @@ export function buildTurnView({
         id: i.id,
         name: i.name,
         cost: i.cost ?? null,
+        actionCost: /^[1-3]$/.test(String(i.cost ?? '')) ? Number(i.cost) : 0,
         descriptionHtml: i.descriptionHtml ?? null,
         // With no routine text, the actions are the routine: show them expanded.
         open: routineEmpty,

@@ -48,3 +48,33 @@ test('no turn card is a no-op', () => {
   document.body.innerHTML = '<p>other</p>';
   expect(() => decorateTurnCard(document.body, { spent: 1, collapsed: true })).not.toThrow();
 });
+
+function cardWithButtons(spentPips) {
+  document.body.innerHTML = `
+    <div class="hazarder-card hz-turn">
+      <div class="hz-pool">
+        ${[0, 1, 2].map((i) => `<span class="hz-action-pip" data-hz-action="spend" data-index="${i}"></span>`).join('')}
+        <span class="hz-used"></span>
+      </div>
+      <button class="atk" data-hz-action="strike" data-cost="1"></button>
+      <button class="dmg" data-hz-action="strike-damage"></button>
+      <button class="free" data-hz-action="item" data-cost="0"></button>
+      <button class="two" data-hz-action="item" data-cost="2"></button>
+    </div>`;
+  decorateTurnCard(document.body, { spent: spentPips });
+  return (sel) => document.querySelector(sel).disabled;
+}
+
+test('buttons that cost actions lock when none are left', () => {
+  const disabled = cardWithButtons(3);
+  expect(disabled('.atk')).toBe(true);
+  expect(disabled('.two')).toBe(true);
+  expect(disabled('.dmg')).toBe(false);
+  expect(disabled('.free')).toBe(false);
+});
+
+test('a cost larger than what is left locks; affordable ones stay open', () => {
+  const disabled = cardWithButtons(2);
+  expect(disabled('.atk')).toBe(false);
+  expect(disabled('.two')).toBe(true);
+});

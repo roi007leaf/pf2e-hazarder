@@ -85,7 +85,7 @@ export async function postTurnCard(combatant) {
     content,
     whisper: gmIds,
     speaker: ChatMessage.getSpeaker({ token: tokenDoc }),
-    flags: { [MODULE_ID]: { kind: 'turn' } },
+    flags: { [MODULE_ID]: { kind: 'turn', round: game.combat?.round, turn: game.combat?.turn } },
   });
   await tokenDoc.setFlag(MODULE_ID, 'turnMessageId', msg.id);
   if (game.settings.get(MODULE_ID, 'publicFlavorCard')) {
@@ -176,4 +176,21 @@ async function applySpend(message) {
   const next = Math.min(max, spent + cost);
   debug('apply', { cost, spent, next, max });
   if (next !== spent) await turnMessage.setFlag(MODULE_ID, 'spent', next);
+}
+
+/** The acting hazard's action pool for combat-tracker display, or null. */
+export function currentHazardPool() {
+  const combat = game.combat;
+  const combatant = combat?.started ? combat.combatant : null;
+  const tokenDoc = combatant?.token;
+  if (!tokenDoc || tokenDoc.actor?.type !== 'hazard') return null;
+  const { plan } = getOrDraftPlan(tokenDoc.actor);
+  const remaining = actionsRemaining(getOrCreateState(tokenDoc, plan), plan);
+  if (!remaining) return null;
+  const card = game.messages.get(tokenDoc.getFlag(MODULE_ID, 'turnMessageId') ?? '');
+  const sameTurn =
+    card?.getFlag(MODULE_ID, 'round') === combat.round &&
+    card?.getFlag(MODULE_ID, 'turn') === combat.turn;
+  const spent = sameTurn ? (card.getFlag(MODULE_ID, 'spent') ?? 0) : 0;
+  return { combatantId: combatant.id, remaining, spent };
 }
