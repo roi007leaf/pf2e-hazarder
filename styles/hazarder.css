@@ -98,16 +98,15 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 7px;
   padding: 0 2px;
 }
 
 /* Action pool uses PF2e's action font (.action-glyph): one "1" glyph per action. */
 .hazarder-card .hz-action-pip {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   color: var(--hz-amber);
-  text-shadow: 0 0 1px var(--hz-amber-deep);
 }
 
 .hazarder-card .hz-action-pip.lost {
@@ -882,24 +881,22 @@ button.hazarder-card:disabled {
 /* Remaining hazard actions in combat trackers (core + PF2e HUD): own line under the name */
 .hz-ct-pool {
   display: flex;
-  gap: 5px;
+  gap: 8px;
   align-items: center;
-  margin: 3px 0 0 3px;
+  margin: 5px 0 2px 2px;
   width: 100%;
 }
 
 .hz-ct-pool .hz-ct-pip {
   flex: 0 0 auto;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1;
   color: #e8a317;
-  text-shadow: 0 0 4px rgb(232 163 23 / 55%);
 }
 
 .hz-ct-pool .hz-ct-pip.used {
   color: rgb(150 150 160);
-  opacity: 0.4;
-  text-shadow: none;
+  opacity: 0.35;
 }
 
 .hazarder-card button[data-cost]:disabled {
