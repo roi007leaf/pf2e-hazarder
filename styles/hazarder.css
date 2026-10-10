@@ -912,3 +912,12 @@ li.combatant:has(.hz-ct-pool) {
   padding-top: 4px;
   padding-bottom: 6px;
 }
+
+.hz-ct-pool .hz-ct-pip.clickable {
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.hz-ct-pool .hz-ct-pip.clickable:hover {
+  transform: scale(1.25);
+}

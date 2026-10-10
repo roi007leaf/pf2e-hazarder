@@ -246,14 +246,24 @@ export function registerHooks(runner) {
   });
 
   // Remaining hazard actions next to the hazard's name in the core tracker and PF2e HUD's tracker.
-  const refreshTrackers = foundry.utils.debounce(
-    () => decorateCombatTracker(document.body, currentHazardPool()),
-    50,
-  );
+  // GMs can click the glyphs to spend/refund actions, same as on the turn card.
+  const decorate = (root) => {
+    const pool = currentHazardPool();
+    const message = pool?.messageId ? game.messages.get(pool.messageId) : null;
+    const onSpend =
+      game.user.isGM && message
+        ? (index) =>
+            message.setFlag(
+              MODULE_ID,
+              'spent',
+              nextSpent(message.getFlag(MODULE_ID, 'spent') ?? 0, index),
+            )
+        : null;
+    decorateCombatTracker(root, pool, onSpend);
+  };
+  const refreshTrackers = foundry.utils.debounce(() => decorate(document.body), 50);
   Hooks.on('renderApplicationV2', (app, html) => {
-    if (html?.querySelector?.('li.combatant[data-combatant-id]')) {
-      decorateCombatTracker(html, currentHazardPool());
-    }
+    if (html?.querySelector?.('li.combatant[data-combatant-id]')) decorate(html);
   });
   Hooks.on('updateChatMessage', (message) => {
     if (message.flags?.[MODULE_ID]?.kind === 'turn') refreshTrackers();

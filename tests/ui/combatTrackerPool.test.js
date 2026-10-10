@@ -36,3 +36,23 @@ test('decorates every tracker on the page, including PF2e HUD rows (.name)', () 
     'hz-ct-pool',
   );
 });
+
+test('glyphs are clickable when a handler is given, without activating the row', () => {
+  document.body.innerHTML = `<li class="combatant" data-combatant-id="h"><div class="token-name"></div></li>`;
+  const rowClick = jest.fn();
+  document.querySelector('li').addEventListener('click', rowClick);
+  const onSpend = jest.fn();
+  decorateCombatTracker(document.body, { combatantId: 'h', remaining: 3, spent: 0 }, onSpend);
+  const pips = document.querySelectorAll('.hz-ct-pip');
+  expect(pips[1].dataset.index).toBe('1');
+  expect(pips[1].classList.contains('clickable')).toBe(true);
+  pips[1].click();
+  expect(onSpend).toHaveBeenCalledWith(1);
+  expect(rowClick).not.toHaveBeenCalled();
+});
+
+test('without a handler the glyphs are display-only', () => {
+  document.body.innerHTML = `<li class="combatant" data-combatant-id="h"><div class="token-name"></div></li>`;
+  decorateCombatTracker(document.body, { combatantId: 'h', remaining: 2, spent: 0 });
+  expect(document.querySelector('.hz-ct-pip').classList.contains('clickable')).toBe(false);
+});

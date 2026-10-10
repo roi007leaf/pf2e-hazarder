@@ -192,5 +192,5 @@ export function currentHazardPool() {
     card?.getFlag(MODULE_ID, 'round') === combat.round &&
     card?.getFlag(MODULE_ID, 'turn') === combat.turn;
   const spent = sameTurn ? (card.getFlag(MODULE_ID, 'spent') ?? 0) : 0;
-  return { combatantId: combatant.id, remaining, spent };
+  return { combatantId: combatant.id, remaining, spent, messageId: sameTurn ? card.id : null };
 }

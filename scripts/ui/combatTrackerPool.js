@@ -2,7 +2,7 @@
  * Show the acting hazard's remaining actions next to its name in combat trackers (core sidebar,
  * its pop-out, and PF2e HUD's tracker), so the GM doesn't have to scroll back to the turn card.
  */
-export function decorateCombatTracker(root, pool) {
+export function decorateCombatTracker(root, pool, onSpend = null) {
   root.querySelectorAll('.hz-ct-pool').forEach((el) => el.remove());
   if (!pool) return;
   for (const row of root.querySelectorAll(
@@ -13,11 +13,11 @@ export function decorateCombatTracker(root, pool) {
       row.querySelector('.details') ??
       row.querySelector('.token-name') ??
       row.querySelector('.name');
-    if (target) target.append(buildPool(pool));
+    if (target) target.append(buildPool(pool, onSpend));
   }
 }
 
-function buildPool({ remaining, spent }) {
+function buildPool({ remaining, spent }, onSpend) {
   const el = document.createElement('div');
   el.className = 'hz-ct-pool';
   el.dataset.tooltip = game.i18n.format('PF2E_HAZARDER.Turn.ActionsLeft', {
@@ -29,6 +29,16 @@ function buildPool({ remaining, spent }) {
     // PF2e's action font renders "1" as the one-action glyph.
     pip.className = i < spent ? 'action-glyph hz-ct-pip used' : 'action-glyph hz-ct-pip';
     pip.textContent = '1';
+    pip.dataset.index = String(i);
+    if (onSpend) {
+      pip.classList.add('clickable');
+      pip.addEventListener('click', (event) => {
+        // Don't let the tracker treat this as selecting/panning to the combatant.
+        event.preventDefault();
+        event.stopPropagation();
+        onSpend(i);
+      });
+    }
     el.append(pip);
   }
   return el;
