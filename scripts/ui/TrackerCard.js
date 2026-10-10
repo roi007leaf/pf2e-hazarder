@@ -45,16 +45,39 @@ export async function rollDisable({ tokenUuid, instanceKey, disableId }) {
     .find((c) => c.id === componentId)
     ?.disables.find((d) => d.id === disableId);
   if (!disable) return;
-  const roller = canvas.tokens?.controlled?.[0]?.actor ?? game.user.character;
+  const controlled = canvas.tokens?.controlled?.[0]?.actor;
+  const roller =
+    typeof controlled?.getStatistic === 'function'
+      ? controlled
+      : (game.user.character ?? controlled);
   if (!roller) {
     ui.notifications.warn(game.i18n.localize('PF2E_HAZARDER.Tracker.NoActor'));
     return;
   }
-  const statistic = roller.getStatistic(disable.skill);
-  if (!statistic) return;
-  await statistic.roll({
-    dc: disable.dc != null ? { value: disable.dc } : undefined,
-    extraRollOptions: [buildTag(tokenDoc.id, componentId, Number(index), disableId)],
-    traits: disable.traits?.filter((t) => !t.includes(':')) ?? [],
-  });
+  const statistic =
+    typeof roller.getStatistic === 'function' ? roller.getStatistic(disable.skill) : null;
+  if (!statistic) {
+    ui.notifications.warn(
+      game.i18n.format('PF2E_HAZARDER.Tracker.NoStatistic', {
+        actor: roller.name,
+        skill: disable.skill,
+      }),
+    );
+    return;
+  }
+  const tag = buildTag(tokenDoc.id, componentId, Number(index), disableId);
+  await statistic.roll(buildDisableRollParams(disable, tag));
+}
+
+/**
+ * Mirrors pf2e's inline-check handler: every trait (including `action:<slug>`) becomes a roll
+ * option, and only plain traits are passed as check traits.
+ */
+export function buildDisableRollParams(disable, tag) {
+  const traits = disable.traits ?? [];
+  return {
+    dc: disable.dc != null ? { value: disable.dc, label: disable.label } : undefined,
+    extraRollOptions: [...traits, tag],
+    traits: traits.filter((t) => !t.includes(':')),
+  };
 }

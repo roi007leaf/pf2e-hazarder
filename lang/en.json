@@ -28,7 +28,8 @@
       "Undo": "Undo last",
       "Reset": "Reset hazard",
       "EditPlan": "Edit plan",
-      "NoActor": "Select your token first."
+      "NoActor": "Select your token first.",
+      "NoStatistic": "{actor} has no {skill} statistic."
     },
     "Turn": {
       "Title": "{name}'s turn",
