@@ -8,7 +8,11 @@ export function decorateCombatTracker(root, pool) {
   for (const row of root.querySelectorAll(
     `li.combatant[data-combatant-id="${pool.combatantId}"]`,
   )) {
-    const target = row.querySelector('.token-name') ?? row.querySelector('.name');
+    // PF2e HUD rows: .details (name + controls); core rows: .token-name. Own line under both.
+    const target =
+      row.querySelector('.details') ??
+      row.querySelector('.token-name') ??
+      row.querySelector('.name');
     if (target) target.append(buildPool(pool));
   }
 }

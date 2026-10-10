@@ -28,8 +28,11 @@ test('re-decorating replaces the previous diamonds; nothing to show is a no-op',
 test('decorates every tracker on the page, including PF2e HUD rows (.name)', () => {
   document.body.innerHTML = `
     <section id="combat"><li class="combatant" data-combatant-id="h"><div class="token-name"><strong class="name">H</strong></div></li></section>
-    <section id="pf2e-hud-tracker"><li class="combatant" data-combatant-id="h"><div class="name">H</div></li></section>`;
+    <section id="pf2e-hud-tracker"><li class="combatant" data-combatant-id="h"><div class="details"><div class="name">H</div><div class="controls"></div></div></li></section>`;
   decorateCombatTracker(document.body, { combatantId: 'h', remaining: 2, spent: 1 });
   expect(document.querySelectorAll('#combat .token-name > .hz-ct-pool')).toHaveLength(1);
-  expect(document.querySelectorAll('#pf2e-hud-tracker .name > .hz-ct-pool')).toHaveLength(1);
+  expect(document.querySelectorAll('#pf2e-hud-tracker .details > .hz-ct-pool')).toHaveLength(1);
+  expect(document.querySelector('#pf2e-hud-tracker .details').lastElementChild.className).toBe(
+    'hz-ct-pool',
+  );
 });

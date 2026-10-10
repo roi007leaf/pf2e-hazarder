@@ -879,25 +879,28 @@ button.hazarder-card:disabled {
   height: 26px;
 }
 
-/* Remaining hazard actions in combat trackers (core + PF2e HUD) */
+/* Remaining hazard actions in combat trackers (core + PF2e HUD): own line under the name */
 .hz-ct-pool {
-  display: inline-flex;
-  gap: 3px;
-  margin-left: 6px;
-  vertical-align: middle;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 3px 0 0 3px;
+  width: 100%;
 }
 
 .hz-ct-pool .hz-ct-pip {
-  width: 8px;
-  height: 8px;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
   transform: rotate(45deg);
   border-radius: 1px;
   background: #e8a317;
-  box-shadow: inset 0 0 0 1px #b97c06;
+  box-shadow: 0 0 4px rgb(232 163 23 / 60%);
 }
 
 .hz-ct-pool .hz-ct-pip.used {
   background: transparent;
+  box-shadow: inset 0 0 0 1px rgb(150 150 160 / 55%);
 }
 
 .hazarder-card button[data-cost]:disabled {
