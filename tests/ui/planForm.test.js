@@ -139,3 +139,53 @@ test('formToPlan assigns non-colliding ids for rows lacking ids', () => {
   expect(plan.components.map((c) => c.id)).toEqual(['c3', 'c4']);
   expect(plan.components[0].disables.map((d) => d.id)).toEqual(['d3', 'd4']);
 });
+
+describe('routine items and counteract', () => {
+  const withCounteract = {
+    ...base,
+    routineItemIds: ['old'],
+    components: [
+      {
+        ...base.components[0],
+        counteract: { spellUuid: 'Compendium.pf2e.spells.X', name: 'Dispel', rank: 3, dc: 20 },
+      },
+    ],
+  };
+
+  test('routineItemIds parsed from checkbox map, kept when absent', () => {
+    const data = { routineItemIds: { a1: true, b2: false, c3: true }, components: {} };
+    expect(formToPlan(data, base).routineItemIds).toEqual(['a1', 'c3']);
+    expect(formToPlan({ components: {} }, withCounteract).routineItemIds).toEqual(['old']);
+    expect(formToPlan({ routineItemIds: ['x', ''], components: {} }, base).routineItemIds).toEqual([
+      'x',
+    ]);
+  });
+
+  test('counteract fields parsed, spellUuid kept, blank name clears', () => {
+    const row = (counteract) => ({ components: { 0: { id: 'c1', name: 'x', counteract } } });
+    expect(
+      formToPlan(row({ name: ' Dispel Magic ', rank: '4', dc: '' }), withCounteract).components[0]
+        .counteract,
+    ).toEqual({ spellUuid: 'Compendium.pf2e.spells.X', name: 'Dispel Magic', rank: 4, dc: null });
+    expect(
+      formToPlan(row({ name: '', rank: '4', dc: '22' }), withCounteract).components[0].counteract,
+    ).toBeNull();
+    expect(
+      formToPlan(row({ name: 'Cleanse', rank: '2', dc: '18' }), base).components[0].counteract,
+    ).toEqual({ spellUuid: null, name: 'Cleanse', rank: 2, dc: 18 });
+    expect(formToPlan(row(undefined), withCounteract).components[0].counteract).toEqual(
+      withCounteract.components[0].counteract,
+    );
+  });
+});
+
+test('planToContext marks routine items as checked', () => {
+  const actor = {
+    items: [
+      { id: 'r1', name: 'Awaken', type: 'action' },
+      { id: 'm1', name: 'Slam', type: 'melee' },
+    ],
+  };
+  const ctx = planToContext({ ...base, reactionItemId: 'r1', routineItemIds: ['m1'] }, [], actor);
+  expect(ctx.routineItems).toEqual([{ id: 'm1', name: 'Slam', checked: true }]);
+});

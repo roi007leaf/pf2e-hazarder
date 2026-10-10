@@ -52,7 +52,14 @@
       "SuccessesNeeded": "Successes needed",
       "AddComponent": "Add component",
       "AddDisable": "Add disable option",
-      "Warnings": "Parser warnings"
+      "Warnings": "Parser warnings",
+      "Reaction": "Reaction",
+      "RoutineItems": "Routine items",
+      "RemoveComponent": "Remove component",
+      "RemoveDisable": "Remove disable option",
+      "Counteract": "Counteract",
+      "CounteractSpell": "Spell (blank = none)",
+      "CounteractRank": "Rank"
     },
     "Warnings": {
       "actions-per-turn-missing": "Could not find \"(N actions)\" in the routine.",

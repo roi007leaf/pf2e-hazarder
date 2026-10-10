@@ -23,13 +23,36 @@ export function nextId(prefix, items) {
 }
 
 export function planToContext(plan, warnings, actor) {
+  const items = [...(actor.items ?? [])]
+    .filter((i) => i.type === 'action' || i.type === 'melee')
+    .map((i) => ({ id: i.id, name: i.name }));
+  const routine = new Set(plan.routineItemIds ?? []);
   return {
     plan,
     warnings: warnings.map((w) => `PF2E_HAZARDER.Warnings.${w}`),
-    items: [...(actor.items ?? [])]
-      .filter((i) => i.type === 'action' || i.type === 'melee')
-      .map((i) => ({ id: i.id, name: i.name })),
+    items,
+    routineItems: items
+      .filter((i) => i.id !== plan.reactionItemId)
+      .map((i) => ({ ...i, checked: routine.has(i.id) })),
   };
+}
+
+function parseIdList(value, fallback) {
+  if (value === undefined) return [...(fallback ?? [])];
+  if (Array.isArray(value)) return value.filter((v) => typeof v === 'string' && v);
+  if (typeof value === 'string') return value ? [value] : [];
+  return Object.entries(value ?? {})
+    .filter(([, on]) => on === true || on === 'true' || on === 'on')
+    .map(([id]) => id);
+}
+
+function parseCounteract(row, prev, keepBlank) {
+  if (row === undefined) return prev ?? null;
+  const name = String(row?.name ?? '').trim();
+  const rank = int(row?.rank);
+  const dc = int(row?.dc);
+  if (!name && !(keepBlank && (rank != null || dc != null))) return null;
+  return { spellUuid: prev?.spellUuid ?? null, name, rank, dc };
 }
 
 export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
@@ -64,7 +87,7 @@ export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
       count: Math.max(1, int(c.count) ?? 1),
       actionsEach: Math.max(0, int(c.actionsEach) ?? 0),
       disables,
-      counteract: prev?.counteract ?? null,
+      counteract: parseCounteract(c.counteract, prev?.counteract, keepBlank),
     };
   });
   return {
@@ -72,6 +95,7 @@ export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
     confirmed: true,
     actionsPerTurn: int(data.actionsPerTurn),
     reactionItemId: data.reactionItemId || null,
+    routineItemIds: parseIdList(data.routineItemIds, basePlan.routineItemIds),
     components,
   };
 }
