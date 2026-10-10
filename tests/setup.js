@@ -7,3 +7,6 @@ global.game = {
   modules: new Map(),
 };
 global.ui = { notifications: { info: jest.fn(), warn: jest.fn(), error: jest.fn() } };
+
+import v8 from 'node:v8';
+global.structuredClone ??= (v) => v8.deserialize(v8.serialize(v));
