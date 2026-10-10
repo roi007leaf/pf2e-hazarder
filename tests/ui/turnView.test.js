@@ -24,7 +24,7 @@ test('pips reflect disabled instances', () => {
   expect(v.pips.filter((p) => p.lost)).toHaveLength(3);
   expect(v.pips[0]).toEqual({ index: 0, lost: false });
   expect(v.disabledNote).toBe('PF2E_HAZARDER.Turn.DisabledNote');
-  expect(v.items).toEqual([{ id: 'm1', name: 'Fist' }]);
+  expect(v.items.map((i) => i.name)).toEqual(['Fist']);
 });
 
 test('null actions per turn gives no pips', () => {
@@ -68,7 +68,7 @@ test('strikes are split from actions and passives are dropped', () => {
       hasDamage: true,
     },
   ]);
-  expect(v.items).toEqual([{ id: 'a1', name: 'Spectral Uprising' }]);
+  expect(v.items.map((i) => i.id)).toEqual(['a1']);
 });
 
 test('traits, saves, outcomes and round', () => {
@@ -104,4 +104,54 @@ test('no round outside combat; defaults for missing extras', () => {
   expect(v.traits).toEqual([]);
   expect(v.saves).toEqual([]);
   expect(v.outcomesHtml).toBeNull();
+});
+
+test('actions carry description, cost and their own saves; empty routine opens them', () => {
+  const p = { ...plan, routineItemIds: ['a1'] };
+  const v = buildTurnView({
+    name: 'Smoke-Filled Hallway',
+    plan: p,
+    state: createInitialState(p),
+    routineHtml: '   ',
+    items: [
+      {
+        id: 'a1',
+        name: 'Choke',
+        cost: 'free',
+        descriptionHtml: '<p>Trigger …</p>',
+        saves: [{ statistic: 'fortitude', dc: 18, basic: false, raw: '@Check[fortitude|dc:18]' }],
+      },
+    ],
+  });
+  expect(v.routineEmpty).toBe(true);
+  expect(v.items).toEqual([
+    {
+      id: 'a1',
+      name: 'Choke',
+      cost: 'free',
+      descriptionHtml: '<p>Trigger …</p>',
+      open: true,
+      saves: [{ index: 0, label: 'Fortitude', dc: 18, basic: false }],
+    },
+  ]);
+});
+
+test('actions stay folded when the routine has text', () => {
+  const p = { ...plan, routineItemIds: ['a1'] };
+  const v = buildTurnView({
+    name: 'X',
+    plan: p,
+    state: createInitialState(p),
+    routineHtml: '<p>It acts.</p>',
+    items: [{ id: 'a1', name: 'Choke' }],
+  });
+  expect(v.routineEmpty).toBe(false);
+  expect(v.items[0]).toEqual({
+    id: 'a1',
+    name: 'Choke',
+    cost: null,
+    descriptionHtml: null,
+    open: false,
+    saves: [],
+  });
 });

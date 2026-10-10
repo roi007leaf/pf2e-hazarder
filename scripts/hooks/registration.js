@@ -86,6 +86,8 @@ function bindCandidatePicker(runner, message, root) {
 async function onCardClick(runner, event) {
   const el = event.target.closest('[data-hz-action]');
   if (!el) return;
+  // Buttons inside a <summary> must not also fold/unfold their block.
+  if (el.tagName === 'BUTTON' && el.closest('summary')) event.preventDefault();
   const card = el.closest('[data-token-uuid]');
   const tokenUuid = el.dataset.tokenUuid ?? card?.dataset.tokenUuid;
   const action = el.dataset.hzAction;
@@ -111,7 +113,10 @@ async function onCardClick(runner, event) {
   if (!tokenDoc) return;
   if (action === 'save-targets') {
     if (!game.user.isGM) return;
-    const save = extractSaves(tokenDoc.actor?.system.details.routine)[Number(el.dataset.saveIndex)];
+    const source = el.dataset.itemId
+      ? tokenDoc.actor?.items.get(el.dataset.itemId)?.system.description?.value
+      : tokenDoc.actor?.system.details.routine;
+    const save = extractSaves(source)[Number(el.dataset.saveIndex)];
     return save ? postSaveRequest(tokenDoc, save.raw) : undefined;
   }
   if (action === 'item-info')

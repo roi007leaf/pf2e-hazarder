@@ -807,3 +807,62 @@ button.hazarder-card:disabled {
   border: none;
   border-radius: 0 0 var(--hz-radius) var(--hz-radius);
 }
+
+/* Turn card: action blocks */
+.hazarder-card .hz-action {
+  border: 1px solid var(--hz-line);
+  border-left: 3px solid var(--hz-amber);
+  border-radius: var(--hz-radius);
+  background: var(--hz-soft);
+}
+
+.hazarder-card .hz-action-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 8px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.hazarder-card .hz-action-head::-webkit-details-marker {
+  display: none;
+}
+
+.hazarder-card .hz-action-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.hazarder-card .hz-action-name > i {
+  color: var(--hz-amber-deep);
+}
+
+.hazarder-card .hz-action-tools {
+  display: flex;
+  gap: 3px;
+}
+
+.hazarder-card .hz-action-tools .hz-icon-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.hazarder-card .hz-action-body {
+  padding: 4px 8px;
+  border-top: 1px solid var(--hz-line);
+}
+
+.hazarder-card .hz-action-body > :first-child {
+  margin-top: 0;
+}
+
+.hazarder-card .hz-action-body > :last-child {
+  margin-bottom: 0;
+}
+
+.hazarder-card .hz-action > .hz-saves {
+  padding: 0 8px 6px;
+}

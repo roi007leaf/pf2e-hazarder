@@ -12,12 +12,24 @@ export function findStrike(actor, itemId) {
   return actor?.system?.actions?.find((a) => a.item?.id === itemId) ?? null;
 }
 
+// Characters of the Pathfinder action font used by pf2e's .action-glyph.
+function actionGlyph(item) {
+  const type = item.system?.actionType?.value;
+  if (type === 'reaction') return 'R';
+  if (type === 'free') return 'F';
+  if (type === 'action') return String(item.system?.actions?.value ?? 1);
+  return null;
+}
+
 function describeItem(actor, item) {
   const base = { id: item.id, name: item.name };
   if (item.type === 'action' && item.system?.actionType?.value === 'passive') {
     return { ...base, passive: true };
   }
-  if (item.type !== 'melee') return base;
+  if (item.type !== 'melee') {
+    const description = item.system?.description?.value ?? '';
+    return { ...base, cost: actionGlyph(item), description, saves: extractSaves(description) };
+  }
   const strike = findStrike(actor, item.id);
   if (!strike) return base;
   return {
@@ -51,7 +63,14 @@ export async function postTurnCard(combatant) {
     traits,
     saves: extractSaves(rawRoutine),
     round: game.combat?.started ? game.combat.round : null,
-    items: actor.items.map((i) => describeItem(actor, i)),
+    items: await Promise.all(
+      actor.items.map(async (i) => {
+        const d = describeItem(actor, i);
+        if (d.description == null) return d;
+        const { description, ...rest } = d;
+        return { ...rest, descriptionHtml: description ? await enrich(description) : null };
+      }),
+    ),
   });
   const content = await render(`modules/${MODULE_ID}/templates/turn-card.hbs`, {
     ...view,

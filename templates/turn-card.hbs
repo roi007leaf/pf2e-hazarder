@@ -16,7 +16,7 @@
       {{#if disabledNote}}<span class="hz-pool-note">· {{disabledNote}}</span>{{/if}}
     </div>
   {{/if}}
-  <div class="hz-routine">{{{routineHtml}}}</div>
+  {{#unless routineEmpty}}<div class="hz-routine">{{{routineHtml}}}</div>{{/unless}}
   {{#if saves.length}}
     <div class="hz-saves">
       {{#each saves}}<button type="button" class="hz-save" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.SaveForTargets'}}" data-hz-action="save-targets" data-save-index="{{@index}}" data-token-uuid="{{../tokenUuid}}"><i class="fa-solid fa-crosshairs"></i> {{#if basic}}{{localize "PF2E_HAZARDER.Turn.Basic"}} {{/if}}{{label}} <span class="hz-dc">DC {{dc}}</span></button>{{/each}}
@@ -43,15 +43,22 @@
       </div>
     </div>
   {{/each}}
-  {{#if items.length}}
-    <div class="hz-chips">
-      {{#each items}}
-        <span class="hz-chip-group">
-          <button type="button" class="hz-chip" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}"><i class="fa-solid fa-bolt"></i> {{name}}</button>
-          <button type="button" class="hz-chip hz-info" data-hz-action="item-info" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.Details'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.Details'}}"><i class="fa-solid fa-info"></i></button>
+  {{#each items}}
+    <details class="hz-action" {{#if open}}open{{/if}}>
+      <summary class="hz-action-head">
+        <span class="hz-action-name">{{#if cost}}<span class="action-glyph">{{cost}}</span>{{else}}<i class="fa-solid fa-bolt"></i>{{/if}} {{name}}</span>
+        <span class="hz-action-tools">
+          <button type="button" class="hz-icon-btn" data-hz-action="item" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.PostAction'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.PostAction'}}"><i class="fa-solid fa-comment-dots"></i></button>
+          <button type="button" class="hz-icon-btn" data-hz-action="item-info" data-item-id="{{id}}" data-token-uuid="{{../tokenUuid}}" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.Details'}}" aria-label="{{localize 'PF2E_HAZARDER.Turn.Details'}}"><i class="fa-solid fa-info"></i></button>
         </span>
-      {{/each}}
-    </div>
-  {{/if}}
+      </summary>
+      {{#if descriptionHtml}}<div class="hz-action-body">{{{descriptionHtml}}}</div>{{/if}}
+      {{#if saves.length}}
+        <div class="hz-saves">
+          {{#each saves}}<button type="button" class="hz-save" data-tooltip="{{localize 'PF2E_HAZARDER.Turn.SaveForTargets'}}" data-hz-action="save-targets" data-item-id="{{../id}}" data-save-index="{{index}}" data-token-uuid="{{../../tokenUuid}}"><i class="fa-solid fa-crosshairs"></i> {{#if basic}}{{localize "PF2E_HAZARDER.Turn.Basic"}} {{/if}}{{label}} <span class="hz-dc">DC {{dc}}</span></button>{{/each}}
+        </div>
+      {{/if}}
+    </details>
+  {{/each}}
   </div>
 </div>

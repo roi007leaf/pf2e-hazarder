@@ -31,6 +31,7 @@ export function buildTurnView({
   const remaining = actionsRemaining(state, plan) ?? 0;
   const disabled = disabledCount(state);
   const byId = new Map(items.map((i) => [i.id, i]));
+  const routineEmpty = !String(routineHtml ?? '').trim();
   const routine = (plan.routineItemIds ?? [])
     .map((id) => byId.get(id))
     .filter((i) => i && !i.passive);
@@ -61,8 +62,22 @@ export function buildTurnView({
         variants: i.strike.variants.map((label, index) => ({ index, label })),
         hasDamage: i.strike.hasDamage,
       })),
+    routineEmpty,
     items: routine
       .filter((i) => !i.strike)
-      .map(({ id, name: itemName }) => ({ id, name: itemName })),
+      .map((i) => ({
+        id: i.id,
+        name: i.name,
+        cost: i.cost ?? null,
+        descriptionHtml: i.descriptionHtml ?? null,
+        // With no routine text, the actions are the routine: show them expanded.
+        open: routineEmpty,
+        saves: (i.saves ?? []).map((sv, index) => ({
+          index,
+          label: saveLabel(sv.statistic),
+          dc: sv.dc,
+          basic: sv.basic,
+        })),
+      })),
   };
 }

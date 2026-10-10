@@ -44,7 +44,8 @@
       "ActionsUsed": "{used} / {total} used",
       "Outcomes": "Outcomes",
       "Basic": "Basic",
-      "SaveForTargets": "Post this save for your targets"
+      "SaveForTargets": "Post this save for your targets",
+      "PostAction": "Post to chat"
     },
     "Plan": {
       "Title": "Hazard plan: {name}",
