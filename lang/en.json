@@ -1,0 +1,46 @@
+{
+  "PF2E_HAZARDER": {
+    "Settings": {
+      "PublicFlavorCard": { "Name": "Public hazard turn card", "Hint": "Also post a short public card when a hazard takes its turn." },
+      "SkipDisabledTurns": { "Name": "Skip disabled hazards", "Hint": "Automatically advance past a disabled hazard's turn." },
+      "RemoveDisabled": { "Name": "Remove disabled hazards from combat", "Hint": "Remove a hazard's combatant once every component is disabled." }
+    },
+    "Status": { "armed": "Armed", "triggered": "Triggered", "active": "Active", "disabled": "Disabled", "reset": "Reset" },
+    "Tracker": {
+      "Title": "{name}: Disable",
+      "NoDisables": "No disable options — edit the plan",
+      "Counteract": "Counteract with {spell} (rank {rank}, DC {dc})",
+      "Undo": "Undo last",
+      "Reset": "Reset hazard",
+      "EditPlan": "Edit plan",
+      "NoActor": "Select your token first."
+    },
+    "Turn": { "Title": "{name}'s turn", "Actions": "Actions: {remaining} / {total}", "DisabledNote": "{count} disabled", "Flavor": "{name} acts!" },
+    "Plan": {
+      "Title": "Hazard plan: {name}",
+      "Review": "{name} has no confirmed plan. Review it now?",
+      "Save": "Save plan",
+      "ActionsPerTurn": "Actions per turn",
+      "Component": "Component",
+      "Count": "Count",
+      "ActionsEach": "Actions lost per disabled instance",
+      "Skill": "Skill",
+      "DC": "DC",
+      "Label": "Label",
+      "SuccessesNeeded": "Successes needed",
+      "AddComponent": "Add component",
+      "AddDisable": "Add disable option",
+      "Warnings": "Parser warnings"
+    },
+    "Warnings": {
+      "actions-per-turn-missing": "Could not find \"(N actions)\" in the routine.",
+      "no-disables": "No inline checks found in the disable text.",
+      "successes-heuristic": "Successes needed guessed from wording — please verify.",
+      "component-count-unknown": "Found a named component but not how many — set the count.",
+      "parse-error": "The parser failed; fill the plan in by hand."
+    },
+    "Match": { "ApplyTo": "Apply to hazard…", "Applied": "Applied to {name}" },
+    "Triggered": { "Title": "{name} triggered!", "Body": "A critical failure triggered the hazard. Post its reaction?", "Fire": "Post reaction" },
+    "Disabled": "{name} is disabled."
+  }
+}
