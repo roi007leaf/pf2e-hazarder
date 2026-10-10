@@ -1,0 +1,40 @@
+<section class="hazarder-plan-body">
+  {{#if warnings.length}}
+    <fieldset class="hz-warnings">
+      <legend>{{localize "PF2E_HAZARDER.Plan.Warnings"}}</legend>
+      {{#each warnings}}<p class="hz-warning">{{localize this}}</p>{{/each}}
+    </fieldset>
+  {{/if}}
+  <div class="form-group">
+    <label>{{localize "PF2E_HAZARDER.Plan.ActionsPerTurn"}}</label>
+    <input type="number" name="actionsPerTurn" value="{{plan.actionsPerTurn}}" min="0" />
+  </div>
+  <div class="form-group">
+    <label>Reaction</label>
+    <select name="reactionItemId">
+      <option value=""></option>
+      {{#each items}}<option value="{{id}}" {{#if (eq id ../plan.reactionItemId)}}selected{{/if}}>{{name}}</option>{{/each}}
+    </select>
+  </div>
+  {{#each plan.components as |c ci|}}
+    <fieldset class="hz-component">
+      <legend>{{localize "PF2E_HAZARDER.Plan.Component"}} {{c.id}}</legend>
+      <input type="hidden" name="components.{{ci}}.id" value="{{c.id}}" />
+      <div class="form-group"><label>{{localize "PF2E_HAZARDER.Plan.Component"}}</label><input type="text" name="components.{{ci}}.name" value="{{c.name}}" /></div>
+      <div class="form-group"><label>{{localize "PF2E_HAZARDER.Plan.Count"}}</label><input type="number" min="1" name="components.{{ci}}.count" value="{{c.count}}" /></div>
+      <div class="form-group"><label>{{localize "PF2E_HAZARDER.Plan.ActionsEach"}}</label><input type="number" min="0" name="components.{{ci}}.actionsEach" value="{{c.actionsEach}}" /></div>
+      {{#each c.disables as |d di|}}
+        <div class="form-group hz-disable">
+          <input type="hidden" name="components.{{ci}}.disables.{{di}}.id" value="{{d.id}}" />
+          <input type="text" placeholder="{{localize 'PF2E_HAZARDER.Plan.Skill'}}" name="components.{{ci}}.disables.{{di}}.skill" value="{{d.skill}}" />
+          <input type="number" placeholder="{{localize 'PF2E_HAZARDER.Plan.DC'}}" name="components.{{ci}}.disables.{{di}}.dc" value="{{d.dc}}" />
+          <input type="text" placeholder="{{localize 'PF2E_HAZARDER.Plan.Label'}}" name="components.{{ci}}.disables.{{di}}.label" value="{{d.label}}" />
+          <input type="number" min="1" title="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}" name="components.{{ci}}.disables.{{di}}.successesNeeded" value="{{d.successesNeeded}}" />
+        </div>
+      {{/each}}
+      <button type="button" data-action="addDisable" data-component="{{ci}}">{{localize "PF2E_HAZARDER.Plan.AddDisable"}}</button>
+    </fieldset>
+  {{/each}}
+  <button type="button" data-action="addComponent">{{localize "PF2E_HAZARDER.Plan.AddComponent"}}</button>
+  <footer class="form-footer"><button type="submit">{{localize "PF2E_HAZARDER.Plan.Save"}}</button></footer>
+</section>
