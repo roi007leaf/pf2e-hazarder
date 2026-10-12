@@ -1,31 +1,33 @@
 # PF2e Hazarder
 
-Run Pathfinder 2e and Starfinder 2e hazards in Foundry VTT v14.
+Run Pathfinder 2e and Starfinder 2e complex hazards in Foundry VTT v14 — the routine, the action pool, the disable checks and the hazard's state, without bookkeeping on scrap paper.
 
-## Phase 1 features
+## Features
 
-- **Hazard plans**: parses a hazard's routine and disable text into actions per turn, components, disable options and counteracts. The GM reviews and saves once; the plan lives on the actor.
-- **GM turn card**: on the hazard's turn, shows remaining actions (reduced as components are disabled), the routine, and buttons for its Strikes and actions.
-- **Disable tracker**: one chat card per hazard token with per-component progress. Players roll from the card; results from inline checks or check requests are matched automatically, ambiguous ones get a GM picker.
-- **States**: armed, triggered, active, disabled, reset. Critical failures prompt the GM to post the reaction.
+- **Hazard plans** — reads a hazard's routine and disable text and turns it into a plan: actions per turn, components, disable options (skill, DC, successes needed) and counteracts. The GM only reviews it when the parser flagged something; the plan lives on the actor (the base actor for unlinked tokens).
+- **GM turn card** — on the hazard's turn: remaining actions as PF2e action glyphs (fewer as components are disabled), the routine, its actions with description, traits and save buttons, and buttons for its Strikes (attack, damage, critical). Using an action spends it automatically; spent-out buttons lock.
+- **Action pool in the combat tracker** — the hazard's remaining actions show on its row in the core tracker and the PF2e HUD tracker; click a glyph to spend or refund an action.
+- **Disable tracker** — one chat card per hazard token with per-component progress, posted at combat start and kept within reach on player turns. Players roll disable checks straight from the card; results from inline checks or check requests are matched to the right hazard automatically, and ambiguous ones get a GM picker. DCs follow PF2e's metagame "show DCs" setting.
+- **States** — armed, triggered, active, disabled and reset. Critical failures prompt the GM to post the hazard's reaction; disabled hazards can skip their turn or leave combat.
+- **PF2e Toolbelt** — when its Target Helper is active, save requests from the turn card carry the current targets.
 
 ## Usage
 
-Add a complex hazard to combat. Review the plan when asked, then run combat as normal. GMs can open the plan from the hazard sheet header ("Hazard Plan") or via `game.modules.get('pf2e-hazarder').api.openPlan(actor)`.
+Add a complex hazard to combat and run combat as normal. Review the plan if asked. GMs can open the plan from the hazard sheet header (**Hazard Plan**) or with `game.modules.get('pf2e-hazarder').api.openPlan(actor)`.
 
 ## Settings
 
-- Public hazard turn card
-- Skip disabled hazards
-- Remove disabled hazards from combat
+| Setting | Scope | Default |
+|---|---|---|
+| Public hazard turn card — also post a short public card on the hazard's turn | world | off |
+| Skip disabled hazards — advance past a disabled hazard's turn | world | on |
+| Remove disabled hazards from combat — once every component is disabled | world | off |
+| Debug logging | client | off |
 
-## Live tests
+## Requirements
 
-`npm run test:live` drives a real Foundry world with Playwright (GM and player browsers) through nine scenarios: import Wheel of Misery, review and save its plan, hazard turn card, a player disable roll, applying results, disabling every instance, reset, and cleanup. It is manual only: it never runs in CI and is not shipped.
+Foundry VTT v14 · PF2e 8.0+ or SF2e 1.0+. Optional: PF2e HUD, PF2e Toolbelt.
 
-1. Launch a disposable Foundry 14 / PF2e world with this checkout and pf2e-hazarder enabled. The world id must be `visioner-qa`, or set `VISIONER_DISPOSABLE_WORLD`; the runner refuses any other world.
-2. Run `npm install` and `npx playwright install chromium` once.
-3. Run `npm run test:live`. It prompts for the Foundry URL and the GM and player account names and passwords (a player owning no other tokens is best). `VISIONER_FOUNDRY_URL`, `VISIONER_GM_USER`, `VISIONER_GM_PASSWORD`, `VISIONER_PLAYER_USER`, `VISIONER_PLAYER_PASSWORD` and `~/.config/pf2e-visioner/live.json` supply defaults.
-4. Each scenario prints `PASS` or `FAIL`. All created documents are flagged and removed afterwards; if a run dies, `npm run test:live:cleanup` recovers from the journal in `artifacts/live/`.
+## Development
 
-Never run it in a campaign world.
+`npm test` (Jest), `npm run lint`. `npm run test:live` drives a real, disposable Foundry world with Playwright through the main hazard scenarios; it is manual only, never runs in CI and is not shipped — never run it in a campaign world.

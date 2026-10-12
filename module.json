@@ -3,15 +3,48 @@
   "title": "PF2e Hazarder",
   "description": "Run Pathfinder 2e and Starfinder 2e hazards: structured routines, action pools, multi-success disable tracking, triggered/disabled/reset states.",
   "version": "0.1.0",
-  "compatibility": { "minimum": "14", "verified": "14" },
-  "authors": [{ "name": "RoiLeaf", "discord": "RoiLeaf" }],
+  "authors": [
+    {
+      "name": "RoiLeaf",
+      "discord": "RoiLeaf"
+    }
+  ],
+  "url": "https://github.com/roi007leaf/pf2e-hazarder",
+  "manifest": "https://github.com/roi007leaf/pf2e-hazarder/releases/latest/download/module.json",
+  "download": "https://github.com/roi007leaf/pf2e-hazarder/releases/download/0.1.0/module.zip",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
   "relationships": {
     "systems": [
-      { "id": "pf2e", "type": "system", "compatibility": { "minimum": "8.0.0" } },
-      { "id": "sf2e", "type": "system", "compatibility": { "minimum": "1.0.0" } }
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "8.0.0"
+        }
+      },
+      {
+        "id": "sf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "1.0.0"
+        }
+      }
     ]
   },
-  "esmodules": ["scripts/main.js"],
-  "styles": ["styles/hazarder.css"],
-  "languages": [{ "lang": "en", "name": "English", "path": "lang/en.json" }]
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/hazarder.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ]
 }

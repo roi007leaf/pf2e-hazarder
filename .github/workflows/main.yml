@@ -1,0 +1,102 @@
+# PF2e Hazarder — test on every push / PR, build and attach the module package on release.
+#
+# Releases: publish a GitHub release tagged "<major>.<minor>.<patch>" (e.g. "0.1.0", a leading "v" is fine).
+# The build job stamps the tag's version and the release URLs into module.json, zips the module and
+# uploads module.json + module.zip to the release. Non-prerelease releases are also pushed to
+# foundryvtt.com (needs the FVTT_API_TOKEN repository secret); prereleases are not.
+name: PF2e Hazarder Release Pipeline
+
+env:
+  project_url: 'https://github.com/${{ github.repository }}'
+  latest_manifest_url: 'https://github.com/${{ github.repository }}/releases/latest/download/module.json'
+  release_module_url: 'https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.zip'
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NPM_CONFIG_AUDIT: false
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate module manifest
+        run: jq empty module.json
+
+      - name: Stamp release version and URLs into module.json
+        if: github.event_name == 'release'
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$VERSION" --arg url "$project_url" --arg manifest "$latest_manifest_url" --arg download "$release_module_url" \
+            '.version = $v | .url = $url | .manifest = $manifest | .download = $download' module.json > module.tmp.json
+          mv module.tmp.json module.json
+          cat module.json
+
+      - name: Create module archive
+        if: github.event_name == 'release'
+        run: |
+          zip --recurse-paths ./module.zip \
+            module.json \
+            scripts/ \
+            templates/ \
+            styles/ \
+            lang/ \
+            README.md \
+            CHANGELOG.md \
+            LICENSE
+
+      - name: Upload manifest and archive to the release
+        if: github.event_name == 'release'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          name: ${{ github.event.release.name }}
+          draft: ${{ github.event.release.unpublished }}
+          prerelease: ${{ github.event.release.prerelease }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: './module.json, ./module.zip'
+          tag: ${{ github.event.release.tag_name }}
+          body: ${{ github.event.release.body }}
+
+  publish-to-foundry:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: ${{ github.event_name == 'release' && github.event.release.prerelease != true }}
+    steps:
+      - name: Publish to Foundry VTT
+        uses: JamesIves/fetch-api-data-action@v2
+        with:
+          endpoint: https://foundryvtt.com/_api/packages/release_version/
+          configuration: '{ "method": "POST", "headers": { "Content-Type": "application/json", "Authorization": "${{ secrets.FVTT_API_TOKEN }}" }, "body": { "id": "pf2e-hazarder", "dry-run": false, "release": { "version": "${{ github.event.release.tag_name }}", "manifest": "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/module.json", "notes": "https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md", "compatibility": { "minimum": "14", "verified": "14", "maximum": "" } } } }'
