@@ -343,3 +343,71 @@ describe('components without disable options', () => {
     expect(state.status).toBe('disabled');
   });
 });
+
+describe('any-combination (shared) successes', () => {
+  const shared = {
+    actionsPerTurn: null,
+    components: [
+      {
+        id: 'c1',
+        name: 'ashes',
+        count: 1,
+        actionsEach: 0,
+        sharedSuccesses: 3,
+        disables: [
+          { id: 'd1', skill: 'occultism', dc: 44, successesNeeded: 3 },
+          { id: 'd2', skill: 'religion', dc: 42, successesNeeded: 3 },
+        ],
+      },
+    ],
+  };
+  const roll = (s, disableId, degree = DEGREE.SUCCESS) =>
+    applyResult(s, shared, r({ disableId, degree })).state;
+
+  test('mixed options add up to the shared total', () => {
+    let s = activate(createInitialState(shared));
+    s = roll(s, 'd1');
+    s = roll(s, 'd1');
+    expect(s.instances[0].disabled).toBe(false);
+    s = roll(s, 'd2');
+    expect(s.instances[0].progress).toEqual({ d1: 2, d2: 1 });
+    expect(s.instances[0].disabled).toBe(true);
+    expect(s.status).toBe('disabled');
+  });
+
+  test('a critical success is capped by what the pool still needs', () => {
+    let s = activate(createInitialState(shared));
+    s = roll(s, 'd1');
+    s = roll(s, 'd1');
+    s = roll(s, 'd2', DEGREE.CRIT_SUCCESS);
+    expect(s.instances[0].progress).toEqual({ d1: 2, d2: 1 });
+  });
+
+  test('undo re-arms the instance', () => {
+    let s = activate(createInitialState(shared));
+    s = roll(s, 'd1');
+    s = roll(s, 'd2', DEGREE.CRIT_SUCCESS);
+    expect(s.instances[0].disabled).toBe(true);
+    s = undo(s, shared);
+    expect(s.instances[0].disabled).toBe(false);
+    expect(s.instances[0].progress).toEqual({ d1: 1, d2: 0 });
+  });
+
+  test('override caps an option at the open slots and disables when full', () => {
+    let s = activate(createInitialState(shared));
+    s = override(s, shared, { instanceKey: 'c1:0', disableId: 'd1', progress: 2 }).state;
+    s = override(s, shared, { instanceKey: 'c1:0', disableId: 'd2', progress: 5 }).state;
+    expect(s.instances[0].progress).toEqual({ d1: 2, d2: 1 });
+    expect(s.instances[0].disabled).toBe(true);
+  });
+
+  test('syncStateToPlan trims progress to the shared total', () => {
+    const s = activate(createInitialState(shared));
+    s.instances[0].progress = { d1: 2, d2: 1 };
+    const smaller = {
+      ...shared,
+      components: [{ ...shared.components[0], sharedSuccesses: 2 }],
+    };
+    expect(syncStateToPlan(s, smaller).instances[0].progress).toEqual({ d1: 2, d2: 0 });
+  });
+});

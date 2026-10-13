@@ -93,6 +93,13 @@ function parseCounteract(row, prev, keepBlank) {
   return { spellUuid: prev?.spellUuid ?? null, name, rank, dc };
 }
 
+// Blank or < 1 turns "any combination" mode off; a missing field keeps the saved value.
+function parseShared(value, prev) {
+  if (value === undefined) return prev ?? null;
+  const n = int(value);
+  return n != null && n >= 1 ? n : null;
+}
+
 export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
   const baseComps = new Map(basePlan.components.map((c) => [c.id, c]));
   const compRows = list(data.components);
@@ -124,6 +131,7 @@ export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
       name: (c.name && String(c.name).trim()) || prev?.name || (keepBlank ? '' : id),
       count: Math.max(1, int(c.count) ?? 1),
       actionsEach: Math.max(0, int(c.actionsEach) ?? 0),
+      sharedSuccesses: parseShared(c.sharedSuccesses, prev?.sharedSuccesses),
       disables,
       counteract: parseCounteract(c.counteract, prev?.counteract, keepBlank),
     };

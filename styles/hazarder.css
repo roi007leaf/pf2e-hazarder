@@ -251,6 +251,12 @@
   border-left-color: var(--hz-disabled);
 }
 
+/* Shared "any combination" total */
+.hazarder-card .hz-shared {
+  font-size: var(--font-size-12, 12px);
+  opacity: 0.85;
+}
+
 /* Success pips */
 .hazarder-card .hz-pips {
   flex: 0 0 auto;

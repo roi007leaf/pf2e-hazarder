@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 (prerelease)
+
+- **"Any combination" disables:** a component can require N successes across all its disable options combined (e.g. three Occultism or Religion successes in any mix). Detected from the disable text and editable in the plan as "Successes in any combination". The tracker shows the shared total.
+
 ## 0.1.0 (prerelease)
 
 First release.

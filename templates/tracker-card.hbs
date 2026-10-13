@@ -24,6 +24,7 @@
           {{else if disabled}}
             <div class="hz-instance-label"><i class="fa-solid fa-check"></i> {{localize "PF2E_HAZARDER.Status.disabled"}}</div>
           {{/if}}
+          {{#if shared}}<div class="hz-shared" data-tooltip="{{shared.have}} / {{shared.need}}"><i class="fa-solid fa-shuffle"></i> {{shared.text}}</div>{{/if}}
           {{#each options}}
             <div class="hz-option">
               {{#unless ../disabled}}

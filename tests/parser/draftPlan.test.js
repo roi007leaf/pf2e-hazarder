@@ -229,3 +229,36 @@ describe('multiplier shared across alternatives', () => {
     ]);
   });
 });
+
+describe('any-combination disables', () => {
+  const shared = (disable) => draftPlan(hazard({ routine: '(1 action)', disable }));
+
+  test.each([
+    [
+      '@Check[occultism|dc:44] (master) to disrupt, or @Check[religion|dc:42] (master) to exorcise. Disabling the trap requires three successful checks, in any combination of Occultism and Religion checks.',
+      3,
+    ],
+    [
+      '@Check[occultism|dc:30] (trained) or @Check[religion|dc:30] (trained) to weaken the haunt; three total successes in any combination are required to disable the haunt',
+      3,
+    ],
+    [
+      'Succeed at two of the following checks in any combination: @Check[athletics|dc:25] (trained) to confiscate debris, @Check[diplomacy|dc:25] (trained) to calm the crowd',
+      2,
+    ],
+    [
+      '@Check[thievery|dc:18] (trained) to puncture a pipe, or @Check[engineering-lore|dc:16] (trained) to turn a valve; any combination of three punctured pipes or turned valves disables the trap',
+      3,
+    ],
+  ])('%#: shared total parsed', (disable, n) => {
+    const { plan, warnings } = shared(disable);
+    expect(plan.components[0].sharedSuccesses).toBe(n);
+    expect(warnings).toContain('shared-successes');
+  });
+
+  test('plain alternatives stay per-option', () => {
+    const { plan, warnings } = shared('@Check[thievery|dc:20] or @Check[arcana|dc:20]');
+    expect(plan.components[0].sharedSuccesses).toBeNull();
+    expect(warnings).not.toContain('shared-successes');
+  });
+});

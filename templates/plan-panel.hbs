@@ -52,6 +52,10 @@
             <span>{{localize "PF2E_HAZARDER.Plan.ActionsEach"}}</span>
             <input type="number" min="0" name="components.{{ci}}.actionsEach" value="{{c.actionsEach}}" />
           </label>
+          <label class="hz-field" data-tooltip="{{localize 'PF2E_HAZARDER.Plan.SharedSuccessesHint'}}">
+            <span>{{localize "PF2E_HAZARDER.Plan.SharedSuccesses"}}</span>
+            <input type="number" min="1" name="components.{{ci}}.sharedSuccesses" value="{{c.sharedSuccesses}}" />
+          </label>
         </div>
 
         <div class="hz-grid">

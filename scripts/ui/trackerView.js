@@ -1,4 +1,4 @@
-import { actionsRemaining, instanceKey } from '../services/RulesEngine.js';
+import { actionsRemaining, instanceKey, optionCap, sharedNeed } from '../services/RulesEngine.js';
 
 const humanise = (slug) =>
   String(slug)
@@ -28,8 +28,21 @@ function buildActions(state, plan) {
   };
 }
 
+function sharedView(progress, need) {
+  const have = Math.min(
+    need,
+    Object.values(progress ?? {}).reduce((a, n) => a + (n ?? 0), 0),
+  );
+  return {
+    have,
+    need,
+    text: game.i18n.format('PF2E_HAZARDER.Tracker.AnyCombination', { have, need }),
+  };
+}
+
 export function buildTrackerView({ name, plan, state, isGM }) {
   const components = plan.components.map((c) => {
+    const shared = sharedNeed(c);
     const instances = state.instances
       .filter((i) => i.componentId === c.id)
       .map((inst) => ({
@@ -37,9 +50,12 @@ export function buildTrackerView({ name, plan, state, isGM }) {
         label: c.count > 1 ? `${c.name} ${inst.index + 1}` : c.name,
         showLabel: c.count > 1,
         disabled: inst.disabled,
+        shared: shared != null ? sharedView(inst.progress, shared) : null,
         options: c.disables.map((d) => {
           const have = inst.progress?.[d.id] ?? 0;
-          const need = d.successesNeeded ?? 1;
+          // Shared pool: this option's own successes plus the slots still open to any option.
+          const need =
+            shared != null ? optionCap(c, inst.progress, d.id) : (d.successesNeeded ?? 1);
           const shownSkill = skillLabel(d.skill);
           return {
             disableId: d.id,

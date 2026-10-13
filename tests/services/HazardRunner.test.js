@@ -291,3 +291,29 @@ test('startHazard can prepare state without posting the tracker', async () => {
   await runner.startHazard(tokenDoc);
   expect(ui.upsertTracker).toHaveBeenCalledWith(tokenDoc);
 });
+
+test('overridePip in any-combination mode fills the shared pool across options', async () => {
+  const shared = {
+    ...plan,
+    components: [
+      {
+        ...plan.components[0],
+        sharedSuccesses: 2,
+        disables: [
+          { id: 'd1', skill: 'occultism', dc: 30, successesNeeded: 2 },
+          { id: 'd2', skill: 'religion', dc: 30, successesNeeded: 2 },
+        ],
+      },
+    ],
+  };
+  const { runner, tokenDoc } = setup({ plan: shared });
+  await runner.overridePip(tokenDoc, 'c1:0', 'd1');
+  expect(tokenDoc.state.instances[0].disabled).toBe(false);
+  await runner.overridePip(tokenDoc, 'c1:0', 'd2');
+  expect(tokenDoc.state.instances[0].progress).toEqual({ d1: 1, d2: 1 });
+  expect(tokenDoc.state.instances[0].disabled).toBe(true);
+  // Pool full: clicking an option empties it and re-arms the instance.
+  await runner.overridePip(tokenDoc, 'c1:0', 'd2');
+  expect(tokenDoc.state.instances[0].progress).toEqual({ d1: 1, d2: 0 });
+  expect(tokenDoc.state.instances[0].disabled).toBe(false);
+});

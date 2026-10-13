@@ -158,3 +158,34 @@ test('dcText is omitted when the DC is unknown', () => {
   expect(unknown.dcText).toBeNull();
   formatSpy.mockRestore();
 });
+
+test('any-combination mode shows a shared total and per-option open slots', () => {
+  const p = {
+    components: [
+      {
+        ...plan.components[0],
+        count: 1,
+        sharedSuccesses: 3,
+        disables: [
+          { id: 'd1', skill: 'occultism', dc: 44, label: 'occultism', successesNeeded: 3 },
+          { id: 'd2', skill: 'religion', dc: 42, label: 'religion', successesNeeded: 3 },
+        ],
+      },
+    ],
+  };
+  const state = createInitialState(p);
+  state.instances[0].progress = { d1: 2, d2: 0 };
+  const inst = buildTrackerView({ name: 'Ashes', plan: p, state, isGM: true }).components[0]
+    .instances[0];
+  expect(inst.shared).toMatchObject({ have: 2, need: 3 });
+  expect(inst.options.map((o) => [o.have, o.need])).toEqual([
+    [2, 3],
+    [0, 1],
+  ]);
+});
+
+test('per-option mode has no shared total', () => {
+  const state = createInitialState(plan);
+  const v = buildTrackerView({ name: 'Wheel', plan, state, isGM: false });
+  expect(v.components[0].instances[0].shared).toBeNull();
+});

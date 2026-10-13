@@ -7,6 +7,31 @@ const needOf = (disable) => disable.successesNeeded ?? 1;
 const findComponent = (plan, componentId) => plan.components.find((c) => c.id === componentId);
 const findDisable = (plan, componentId, disableId) =>
   findComponent(plan, componentId)?.disables.find((d) => d.id === disableId);
+const sumProgress = (progress) => Object.values(progress ?? {}).reduce((a, n) => a + (n ?? 0), 0);
+
+/** Successes needed in "any combination" mode, or null when each option counts on its own. */
+export const sharedNeed = (component) => {
+  const n = component?.sharedSuccesses;
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+/** Highest progress `disableId` may hold on an instance with this `progress`. */
+export function optionCap(component, progress, disableId) {
+  const shared = sharedNeed(component);
+  if (shared == null) {
+    return needOf(component.disables.find((d) => d.id === disableId) ?? {});
+  }
+  const own = progress?.[disableId] ?? 0;
+  return own + Math.max(0, shared - sumProgress(progress));
+}
+
+/** Whether `progress` disables an instance of `component`. */
+export function meetsDisable(component, progress) {
+  const shared = sharedNeed(component);
+  if (shared != null)
+    return (component.disables ?? []).length > 0 && sumProgress(progress) >= shared;
+  return (component.disables ?? []).some((d) => (progress?.[d.id] ?? 0) >= needOf(d));
+}
 
 function freshProgress(component) {
   return Object.fromEntries((component.disables ?? []).map((d) => [d.id, 0]));
@@ -57,8 +82,12 @@ export function syncStateToPlan(state, plan) {
     const prev = old.get(keyOf(fresh));
     if (!prev) return fresh;
     const progress = { ...fresh.progress };
-    for (const d of findComponent(plan, fresh.componentId)?.disables ?? []) {
-      progress[d.id] = Math.min(needOf(d), prev.progress?.[d.id] ?? 0);
+    const comp = findComponent(plan, fresh.componentId);
+    for (const d of comp?.disables ?? []) {
+      progress[d.id] = Math.min(
+        optionCap(comp, { ...progress, [d.id]: 0 }, d.id),
+        prev.progress?.[d.id] ?? 0,
+      );
     }
     return { ...fresh, progress, disabled: prev.disabled };
   });
@@ -86,9 +115,8 @@ function revertEntry(state, plan, entry) {
           (inst.progress[entry.disableId] ?? 0) - entry.delta,
         );
       if (entry.disabledSet) {
-        const comp = findComponent(plan, inst.componentId);
-        const meets = (comp?.disables ?? []).some((d) => (inst.progress[d.id] ?? 0) >= needOf(d));
-        if (!meets) inst.disabled = false;
+        if (!meetsDisable(findComponent(plan, inst.componentId), inst.progress))
+          inst.disabled = false;
       }
     } else {
       if (entry.disableId && entry.progressDelta) {
@@ -152,9 +180,9 @@ export function applyResult(state, plan, r) {
     events.push({ type: 'hazardTriggered', instanceKey: r.instanceKey });
   } else {
     const add = r.degree === DEGREE.CRIT_SUCCESS ? 2 : r.degree === DEGREE.SUCCESS ? 1 : 0;
-    const need = needOf(disable);
+    const component = findComponent(plan, inst.componentId);
     const before = inst.progress[r.disableId] ?? 0;
-    const after = Math.min(need, before + add);
+    const after = Math.min(optionCap(component, inst.progress, r.disableId), before + add);
     inst.progress[r.disableId] = after;
     delta = after - before;
     events.push({
@@ -163,7 +191,7 @@ export function applyResult(state, plan, r) {
       disableId: r.disableId,
       value: after,
     });
-    if (after >= need) {
+    if (meetsDisable(component, inst.progress)) {
       inst.disabled = true;
       disabledSet = true;
       events.push({ type: 'instanceDisabled', instanceKey: r.instanceKey });
@@ -209,12 +237,12 @@ export function override(state, plan, { instanceKey: key, disableId, progress, d
   };
   let target = disabled;
   if (disable && progress !== undefined) {
-    const need = needOf(disable);
+    const component = findComponent(plan, inst.componentId);
     const before = inst.progress[disableId] ?? 0;
-    const after = Math.min(need, Math.max(0, progress));
+    const after = Math.min(optionCap(component, inst.progress, disableId), Math.max(0, progress));
     inst.progress[disableId] = after;
     entry.progressDelta = after - before;
-    if (target === undefined && after >= need) target = true;
+    if (target === undefined && meetsDisable(component, inst.progress)) target = true;
   }
   if (target !== undefined && target !== inst.disabled) {
     entry.disabledChange = { from: inst.disabled, to: target };

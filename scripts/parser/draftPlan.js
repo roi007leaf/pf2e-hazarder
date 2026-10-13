@@ -17,7 +17,15 @@ const NUM = '\\d+|one|two|three|four|five|six|seven|eight|nine|ten';
 const toNum = (s) => (/^\d+$/.test(s) ? Number(s) : (WORD_NUM[s.toLowerCase()] ?? null));
 
 function emptyComponent(name) {
-  return { id: 'c1', name, count: 1, actionsEach: 0, disables: [], counteract: null };
+  return {
+    id: 'c1',
+    name,
+    count: 1,
+    actionsEach: 0,
+    sharedSuccesses: null,
+    disables: [],
+    counteract: null,
+  };
 }
 
 function basePlan(name) {
@@ -61,6 +69,25 @@ function successesFor(rawDisable, checks) {
     }
   }
   return { counts, inferred };
+}
+
+// "three total successes in any combination", "requires three successful checks, in any
+// combination", "Succeed at two of the following checks in any combination", "any combination of
+// three punctured pipes": every option adds to one shared total.
+const SHARED_PATTERNS = [
+  new RegExp(`\\b(${NUM})\\s+(?:total\\s+)?(?:successful\\s+checks|successes)\\b`, 'i'),
+  new RegExp(`\\bsucceed\\s+at\\s+(${NUM})\\s+of\\b`, 'i'),
+  new RegExp(`\\bany\\s+combination\\s+of\\s+(${NUM})\\b`, 'i'),
+];
+function parseSharedSuccesses(text) {
+  for (const sentence of text.split(/(?<=[.;])\s+/)) {
+    if (!/\bany\s+combination\b/i.test(sentence)) continue;
+    for (const re of SHARED_PATTERNS) {
+      const m = re.exec(sentence);
+      if (m) return toNum(m[1]);
+    }
+  }
+  return null;
 }
 
 // Routine text opens with "(N actions; traits)", "(six actions)", "(two-actions)", "Routine (N actions)",
@@ -130,6 +157,10 @@ export function draftPlan(source) {
       });
     });
     if (!checks.length) warnings.push('no-disables');
+    else if (checks.length > 1) {
+      component.sharedSuccesses = parseSharedSuccesses(stripHtml(rawDisable));
+      if (component.sharedSuccesses != null) warnings.push('shared-successes');
+    }
 
     component.counteract = parseCounteracts(rawDisable)[0] ?? null;
 

@@ -35,7 +35,8 @@
       "DC": "DC {dc}",
       "NoActor": "Select your token first.",
       "NoStatistic": "{actor} has no {skill} statistic.",
-      "PostCheck": "Post this check to chat"
+      "PostCheck": "Post this check to chat",
+      "AnyCombination": "{have} / {need} successes, any combination"
     },
     "Turn": {
       "Title": "{name}'s turn",
@@ -68,6 +69,8 @@
       "DC": "DC",
       "Label": "Label",
       "SuccessesNeeded": "Successes needed",
+      "SharedSuccesses": "Successes in any combination",
+      "SharedSuccessesHint": "Blank = each option counts on its own. A number makes every option add to one shared total, and the per-option counts are ignored.",
       "AddComponent": "Add component",
       "AddDisable": "Add disable option",
       "Warnings": "Parser warnings",
@@ -84,6 +87,7 @@
       "actions-per-turn-missing": "Could not find \"(N actions)\" in the routine.",
       "no-disables": "No inline checks found in the disable text.",
       "successes-heuristic": "Successes needed guessed from wording — please verify.",
+      "shared-successes": "Disable text says \"any combination\" — options share one success total. Please verify.",
       "component-count-unknown": "Found a named component but not how many — set the count.",
       "parse-error": "The parser failed; fill the plan in by hand."
     },

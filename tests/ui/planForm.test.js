@@ -217,3 +217,13 @@ describe('skillOptions', () => {
     expect(slugs).toHaveLength(17);
   });
 });
+
+test('formToPlan reads sharedSuccesses; blank turns it off, missing keeps it', () => {
+  const row = (extra) => ({
+    components: { 0: { id: 'c1', name: 'x', count: '1', actionsEach: '0', ...extra } },
+  });
+  expect(formToPlan(row({ sharedSuccesses: '3' }), base).components[0].sharedSuccesses).toBe(3);
+  expect(formToPlan(row({ sharedSuccesses: '' }), base).components[0].sharedSuccesses).toBeNull();
+  const withShared = { ...base, components: [{ ...base.components[0], sharedSuccesses: 4 }] };
+  expect(formToPlan(row({}), withShared).components[0].sharedSuccesses).toBe(4);
+});
