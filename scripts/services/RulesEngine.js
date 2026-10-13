@@ -170,6 +170,23 @@ export function applyResult(state, plan, r) {
       events: [{ type: 'ignored', reason: 'unknown-disable', instanceKey: r.instanceKey }],
     };
 
+  // An under-ranked roller may not attempt this option at all: the check counts for nothing.
+  if (disable.minRank && r.rank != null && r.rank < disable.minRank) {
+    return {
+      state: base,
+      events: [
+        {
+          type: 'ignored',
+          reason: 'rank-too-low',
+          instanceKey: r.instanceKey,
+          disableId: r.disableId,
+          minRank: disable.minRank,
+          rank: r.rank,
+        },
+      ],
+    };
+  }
+
   const prevStatus = next.status;
   const events = [];
   let delta = 0;

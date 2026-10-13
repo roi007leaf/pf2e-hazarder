@@ -20,6 +20,12 @@ export function registerSettings() {
     hint: 'PF2E_HAZARDER.Settings.RemoveDisabled.Hint',
     default: false,
   });
+  game.settings.register(MODULE_ID, 'enforceProficiency', {
+    ...common,
+    name: 'PF2E_HAZARDER.Settings.EnforceProficiency.Name',
+    hint: 'PF2E_HAZARDER.Settings.EnforceProficiency.Hint',
+    default: true,
+  });
   game.settings.register(MODULE_ID, 'debug', {
     scope: 'client',
     config: true,

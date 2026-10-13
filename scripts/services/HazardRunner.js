@@ -1,4 +1,4 @@
-import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
+import { MODULE_ID, OUTCOME_TO_DEGREE, RANKS, STATUS } from '../constants.js';
 import { getSystemFlags } from '../systemCompat.js';
 import * as Engine from './RulesEngine.js';
 import { extractCheck, matchCheck } from './RollMatcher.js';
@@ -23,6 +23,18 @@ export function defaultCandidates(store) {
     if (s && (s.status === STATUS.ACTIVE || s.status === STATUS.TRIGGERED)) add(t);
   }
   return [...seen.values()];
+}
+
+/** Whether disable options' minimum proficiency ranks are enforced (world setting, default on). */
+export function enforceRanks() {
+  return game.settings.get(MODULE_ID, 'enforceProficiency') !== false;
+}
+
+/** The rolling actor's rank in the checked statistic, or null when unknown or not enforced. */
+export function rankFromMessage(message, statistic) {
+  if (!statistic || !enforceRanks()) return null;
+  const rank = message.actor?.getStatistic?.(statistic)?.rank;
+  return Number.isInteger(rank) ? rank : null;
 }
 
 export class HazardRunner {
@@ -67,7 +79,8 @@ export class HazardRunner {
     const degree = OUTCOME_TO_DEGREE[context.outcome];
     if (degree === undefined) return skipped;
 
-    const result = matchCheck(extractCheck(context), this.getCandidates());
+    const check = extractCheck(context);
+    const result = matchCheck(check, this.getCandidates());
     if (result.kind === 'ambiguous') {
       await message.setFlag(MODULE_ID, 'candidates', result.matches);
       return { kind: 'ambiguous', applied: false };
@@ -84,6 +97,8 @@ export class HazardRunner {
       messageId: message.id,
       userId: message.author?.id ?? null,
       isReroll: !!context.isReroll,
+      rank: rankFromMessage(message, check.statistic),
+      actorName: message.actor?.name ?? null,
     });
     if (events.every((e) => e.type === 'ignored')) return { kind: result.kind, applied: false };
     await message.setFlag(MODULE_ID, 'applied', true);
@@ -105,7 +120,10 @@ export class HazardRunner {
         };
       }
       const { state: next, events } = Engine.applyResult(state, plan, { ...r, at: this.now() });
-      if (events.every((e) => e.type === 'ignored')) return { events, plan };
+      if (events.every((e) => e.type === 'ignored')) {
+        this.#warnRank(events, plan, r);
+        return { events, plan };
+      }
       await this.store.setState(tokenDoc, next);
       await this.#afterEvents(tokenDoc, events);
       await this.ui.upsertTracker(tokenDoc);
@@ -117,6 +135,19 @@ export class HazardRunner {
         .catch((err) => console.error('pf2e-hazarder |', err));
     }
     return events;
+  }
+
+  #warnRank(events, plan, r) {
+    const e = events.find((ev) => ev.reason === 'rank-too-low');
+    if (!e) return;
+    const disable = plan.components.flatMap((c) => c.disables).find((d) => d.id === e.disableId);
+    this.ui.warn?.(
+      game.i18n.format('PF2E_HAZARDER.Tracker.RankTooLow', {
+        actor: r.actorName ?? '?',
+        rank: game.i18n.localize(`PF2E_HAZARDER.Rank.${RANKS[e.minRank]}`),
+        skill: disable?.label ?? disable?.skill ?? '',
+      }),
+    );
   }
 
   async #afterEvents(tokenDoc, events) {

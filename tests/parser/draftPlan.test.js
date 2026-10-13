@@ -262,3 +262,33 @@ describe('any-combination disables', () => {
     expect(warnings).not.toContain('shared-successes');
   });
 });
+
+test('minimum ranks: own rank, shared trailing rank, none', () => {
+  const { plan } = draftPlan(
+    hazard({
+      routine: '(1 action)',
+      disable:
+        '@Check[arcana|dc:33] (expert) to disrupt, @Check[occultism|dc:30] or @Check[religion|dc:30] (master) to suppress, or @Check[thievery|dc:28] to jam it',
+    }),
+  );
+  expect(plan.components[0].disables.map((d) => [d.skill, d.minRank])).toEqual([
+    ['arcana', 2],
+    ['occultism', 3],
+    ['religion', 3],
+    ['thievery', null],
+  ]);
+});
+
+test('rank inside the label or after an action cost; label loses the rank', () => {
+  const { plan } = draftPlan(
+    hazard({
+      routine: '(1 action)',
+      disable:
+        '@Check[thievery|dc:37]{Thievery (master)} to jam it, or @Check[arcana|dc:16] (2 actions) (trained) to dispel',
+    }),
+  );
+  expect(plan.components[0].disables.map((d) => [d.label, d.minRank])).toEqual([
+    ['Thievery', 3],
+    ['arcana', 1],
+  ]);
+});

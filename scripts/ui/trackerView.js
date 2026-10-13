@@ -1,3 +1,4 @@
+import { RANKS } from '../constants.js';
 import { actionsRemaining, instanceKey, optionCap, sharedNeed } from '../services/RulesEngine.js';
 
 const humanise = (slug) =>
@@ -66,6 +67,9 @@ export function buildTrackerView({ name, plan, state, isGM }) {
             dc: d.dc,
             dcText:
               d.dc != null ? game.i18n.format('PF2E_HAZARDER.Tracker.DC', { dc: d.dc }) : null,
+            rankText: d.minRank
+              ? game.i18n.localize(`PF2E_HAZARDER.Rank.${RANKS[d.minRank]}`)
+              : null,
             have,
             need,
             pips: Array.from({ length: need }, (_, i) => ({ filled: i < have })),

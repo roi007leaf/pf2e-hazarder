@@ -12,7 +12,12 @@ export function createRunner() {
       game.combat?.combatants.find((c) => c.tokenId === id)?.token ??
       null,
     store,
-    ui: { upsertTracker, showTriggered, notify: (t) => ui.notifications.info(t) },
+    ui: {
+      upsertTracker,
+      showTriggered,
+      notify: (t) => ui.notifications.info(t),
+      warn: (t) => ui.notifications.warn(t),
+    },
     isWriter: () => !!game.users.activeGM?.isSelf,
     now: () => game.time.worldTime,
   });

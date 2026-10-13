@@ -1,5 +1,6 @@
 import { MODULE_ID, OUTCOME_TO_DEGREE, STATUS } from '../constants.js';
 import { extractCheck, matchCheck } from '../services/RollMatcher.js';
+import { rankFromMessage } from '../services/HazardRunner.js';
 import { getSystemFlags } from '../systemCompat.js';
 import {
   baseActor,
@@ -88,6 +89,8 @@ function bindCandidatePicker(runner, message, root) {
           messageId: message.id,
           userId: message.author?.id ?? null,
           isReroll: !!context.isReroll,
+          rank: rankFromMessage(message, extractCheck(context).statistic),
+          actorName: message.actor?.name ?? null,
         });
         if (events.some((e) => e.type !== 'ignored')) {
           applied = true;

@@ -69,4 +69,21 @@ describe('rollDisable', () => {
       traits: [],
     });
   });
+
+  test('blocks a roller below the minimum rank', async () => {
+    const roll = jest.fn();
+    plan.components[0].disables[0].minRank = 3;
+    try {
+      global.canvas = {
+        tokens: {
+          controlled: [{ actor: { name: 'Ezren', getStatistic: () => ({ roll, rank: 2 }) } }],
+        },
+      };
+      await rollDisable({ tokenUuid: 'x', instanceKey: 'c1:0', disableId: 'd1' });
+      expect(roll).not.toHaveBeenCalled();
+      expect(ui.notifications.warn).toHaveBeenCalledWith('PF2E_HAZARDER.Tracker.RankTooLow');
+    } finally {
+      delete plan.components[0].disables[0].minRank;
+    }
+  });
 });

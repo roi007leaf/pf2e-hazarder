@@ -11,6 +11,9 @@ export const STATUS = Object.freeze({
   RESET: 'reset',
 });
 
+/** PF2e proficiency ranks by number (0 = untrained … 4 = legendary). */
+export const RANKS = Object.freeze(['untrained', 'trained', 'expert', 'master', 'legendary']);
+
 export const DEGREE = Object.freeze({ CRIT_FAIL: 0, FAIL: 1, SUCCESS: 2, CRIT_SUCCESS: 3 });
 
 export const OUTCOME_TO_DEGREE = Object.freeze({

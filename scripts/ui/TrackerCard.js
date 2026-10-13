@@ -1,4 +1,5 @@
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, RANKS } from '../constants.js';
+import { enforceRanks } from '../services/HazardRunner.js';
 import { buildTag } from '../services/RollMatcher.js';
 import {
   getOrCreateState,
@@ -61,6 +62,17 @@ export async function rollDisable({ tokenUuid, instanceKey, disableId }) {
       game.i18n.format('PF2E_HAZARDER.Tracker.NoStatistic', {
         actor: roller.name,
         skill: disable.skill,
+      }),
+    );
+    return;
+  }
+  const rank = statistic.rank;
+  if (enforceRanks() && disable.minRank && Number.isInteger(rank) && rank < disable.minRank) {
+    ui.notifications.warn(
+      game.i18n.format('PF2E_HAZARDER.Tracker.RankTooLow', {
+        actor: roller.name,
+        rank: game.i18n.localize(`PF2E_HAZARDER.Rank.${RANKS[disable.minRank]}`),
+        skill: disable.label ?? disable.skill,
       }),
     );
     return;

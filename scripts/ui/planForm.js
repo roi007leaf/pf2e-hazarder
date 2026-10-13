@@ -1,3 +1,5 @@
+import { RANKS } from '../constants.js';
+
 const int = (v) => {
   const n = Number.parseInt(v, 10);
   return Number.isFinite(n) ? n : null;
@@ -67,6 +69,7 @@ export function planToContext(plan, warnings, actor) {
   return {
     plan,
     skills: skillOptions(),
+    ranks: RANKS.map((r, value) => ({ value, label: `PF2E_HAZARDER.Rank.${r}` })),
     warnings: warnings.map((w) => `PF2E_HAZARDER.Warnings.${w}`),
     items,
     routineItems: items
@@ -91,6 +94,13 @@ function parseCounteract(row, prev, keepBlank) {
   const dc = int(row?.dc);
   if (!name && !(keepBlank && (rank != null || dc != null))) return null;
   return { spellUuid: prev?.spellUuid ?? null, name, rank, dc };
+}
+
+// 0 / blank = any rank may attempt; a missing field keeps the saved value.
+function parseRank(value, prev) {
+  if (value === undefined) return prev ?? null;
+  const n = int(value);
+  return n != null && n >= 1 ? Math.min(RANKS.length - 1, n) : null;
 }
 
 // Blank or < 1 turns "any combination" mode off; a missing field keeps the saved value.
@@ -124,6 +134,7 @@ export function formToPlan(data, basePlan, { keepBlank = false } = {}) {
           label: (d.label && String(d.label).trim()) || skill,
           traits: d.id ? (prevDisables.get(did)?.traits ?? []) : [],
           successesNeeded: Math.max(1, int(d.successesNeeded) ?? 1),
+          minRank: parseRank(d.minRank, prevDisables.get(did)?.minRank),
         };
       });
     return {

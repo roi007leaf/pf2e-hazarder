@@ -16,6 +16,10 @@
       "Debug": {
         "Name": "Debug logging",
         "Hint": "Log Hazarder decisions (e.g. why an action was or was not counted) to the browser console."
+      },
+      "EnforceProficiency": {
+        "Name": "Enforce proficiency requirements",
+        "Hint": "Disable options marked e.g. \"(master)\" can only be attempted by characters with at least that rank in the skill. Under-ranked rolls are blocked from the tracker and not counted from chat."
       }
     },
     "Status": {
@@ -36,7 +40,8 @@
       "NoActor": "Select your token first.",
       "NoStatistic": "{actor} has no {skill} statistic.",
       "PostCheck": "Post this check to chat",
-      "AnyCombination": "{have} / {need} successes, any combination"
+      "AnyCombination": "{have} / {need} successes, any combination",
+      "RankTooLow": "{actor} needs {rank} proficiency for {skill}; the check does not count."
     },
     "Turn": {
       "Title": "{name}'s turn",
@@ -81,7 +86,8 @@
       "Counteract": "Counteract",
       "CounteractSpell": "Spell (blank = none)",
       "CounteractRank": "Rank",
-      "OpenSheet": "Open hazard sheet"
+      "OpenSheet": "Open hazard sheet",
+      "MinRank": "Min. rank"
     },
     "Warnings": {
       "actions-per-turn-missing": "Could not find \"(N actions)\" in the routine.",
@@ -104,6 +110,13 @@
     "Disabled": "{name} is disabled.",
     "Errors": {
       "NotActiveGM": "Only the active GM can change hazard state."
+    },
+    "Rank": {
+      "untrained": "Any",
+      "trained": "Trained",
+      "expert": "Expert",
+      "master": "Master",
+      "legendary": "Legendary"
     }
   }
 }

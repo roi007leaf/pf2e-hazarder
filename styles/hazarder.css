@@ -251,6 +251,14 @@
   border-left-color: var(--hz-disabled);
 }
 
+/* Minimum proficiency rank badge */
+.hazarder-card .hz-rank {
+  flex: 0 0 auto;
+  font-size: var(--font-size-11, 11px);
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
 /* Shared "any combination" total */
 .hazarder-card .hz-shared {
   font-size: var(--font-size-12, 12px);
@@ -616,7 +624,7 @@ button.hazarder-card:disabled {
 .hazarder-plan .hz-grid-head,
 .hazarder-plan .hz-grid-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) 64px minmax(0, 1.6fr) 48px 28px;
+  grid-template-columns: minmax(0, 1.4fr) 64px minmax(0, 1.6fr) 84px 48px 28px;
   gap: 4px;
   align-items: center;
 }

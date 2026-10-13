@@ -63,6 +63,7 @@
             <span>{{localize "PF2E_HAZARDER.Plan.Skill"}}</span>
             <span>{{localize "PF2E_HAZARDER.Plan.DC"}}</span>
             <span>{{localize "PF2E_HAZARDER.Plan.Label"}}</span>
+            <span>{{localize "PF2E_HAZARDER.Plan.MinRank"}}</span>
             <span data-tooltip="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}"><i class="fa-solid fa-check-double"></i></span>
             <span></span>
           </div>
@@ -72,6 +73,9 @@
               <input type="text" name="components.{{ci}}.disables.{{di}}.skill" value="{{d.skill}}" list="hazarder-skills" autocomplete="off" placeholder="thievery" />
               <input type="number" name="components.{{ci}}.disables.{{di}}.dc" value="{{d.dc}}" />
               <input type="text" name="components.{{ci}}.disables.{{di}}.label" value="{{d.label}}" />
+              <select name="components.{{ci}}.disables.{{di}}.minRank" aria-label="{{localize 'PF2E_HAZARDER.Plan.MinRank'}}">
+                {{selectOptions @root.ranks selected=d.minRank valueAttr="value" labelAttr="label" localize=true}}
+              </select>
               <input type="number" min="1" name="components.{{ci}}.disables.{{di}}.successesNeeded" value="{{d.successesNeeded}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.SuccessesNeeded'}}" />
               <button type="button" class="hz-icon-btn hz-danger" data-action="removeDisable" data-component="{{ci}}" data-disable="{{di}}" data-tooltip="{{localize 'PF2E_HAZARDER.Plan.RemoveDisable'}}" aria-label="{{localize 'PF2E_HAZARDER.Plan.RemoveDisable'}}"><i class="fa-solid fa-xmark"></i></button>
             </div>

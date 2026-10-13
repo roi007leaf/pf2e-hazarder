@@ -45,8 +45,34 @@ test('formToPlan parses numbers and confirms', () => {
   expect(plan.reactionItemId).toBe('r1');
   expect(plan.components[0]).toMatchObject({ id: 'c1', name: 'Rune', count: 4, actionsEach: 0 });
   expect(plan.components[0].disables).toEqual([
-    { id: 'd1', skill: 'thievery', dc: 22, label: 'Erase', traits: ['t'], successesNeeded: 1 },
+    {
+      id: 'd1',
+      skill: 'thievery',
+      dc: 22,
+      label: 'Erase',
+      traits: ['t'],
+      successesNeeded: 1,
+      minRank: null,
+    },
   ]);
+});
+
+test('formToPlan reads minRank; 0 means any rank, missing keeps the saved value', () => {
+  const row = (d) => ({
+    components: { 0: { id: 'c1', name: 'x', count: '1', actionsEach: '0', disables: { 0: d } } },
+  });
+  const d = { id: 'd1', skill: 'thievery', dc: '20', label: 'A', successesNeeded: '1' };
+  expect(formToPlan(row({ ...d, minRank: '3' }), base).components[0].disables[0].minRank).toBe(3);
+  expect(
+    formToPlan(row({ ...d, minRank: '0' }), base).components[0].disables[0].minRank,
+  ).toBeNull();
+  const ranked = {
+    ...base,
+    components: [
+      { ...base.components[0], disables: [{ ...base.components[0].disables[0], minRank: 2 }] },
+    ],
+  };
+  expect(formToPlan(row(d), ranked).components[0].disables[0].minRank).toBe(2);
 });
 
 test('formToPlan assigns ids, clamps count and blank actions → null', () => {

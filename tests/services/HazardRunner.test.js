@@ -317,3 +317,47 @@ test('overridePip in any-combination mode fills the shared pool across options',
   expect(tokenDoc.state.instances[0].progress).toEqual({ d1: 1, d2: 0 });
   expect(tokenDoc.state.instances[0].disabled).toBe(false);
 });
+
+describe('minimum proficiency rank', () => {
+  const ranked = {
+    ...plan,
+    components: [
+      {
+        ...plan.components[0],
+        disables: [
+          { id: 'd1', skill: 'thievery', dc: 22, label: 'Pick', successesNeeded: 1, minRank: 3 },
+        ],
+      },
+    ],
+  };
+  const withActor = (rank) => ({
+    ...msg(ctx()),
+    actor: { name: 'Ezren', getStatistic: (s) => (s === 'thievery' ? { rank } : null) },
+  });
+
+  test('an under-ranked roll is not counted and the GM is warned', async () => {
+    const { runner, tokenDoc, ui } = setup({ plan: ranked });
+    ui.warn = jest.fn();
+    const res = await runner.handleCheckMessage(withActor(2));
+    expect(res.applied).toBe(false);
+    expect(tokenDoc.state.instances[0].progress.d1).toBe(0);
+    expect(ui.warn).toHaveBeenCalledWith('PF2E_HAZARDER.Tracker.RankTooLow');
+  });
+
+  test('a roller at the rank counts', async () => {
+    const { runner, tokenDoc } = setup({ plan: ranked });
+    expect((await runner.handleCheckMessage(withActor(3))).applied).toBe(true);
+    expect(tokenDoc.state.instances[0].disabled).toBe(true);
+  });
+
+  test('the setting turns enforcement off', async () => {
+    const orig = game.settings;
+    game.settings = { get: (_m, k) => (k === 'enforceProficiency' ? false : null) };
+    try {
+      const { runner } = setup({ plan: ranked });
+      expect((await runner.handleCheckMessage(withActor(1))).applied).toBe(true);
+    } finally {
+      game.settings = orig;
+    }
+  });
+});

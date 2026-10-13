@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 (prerelease)
+
+- **Proficiency requirements:** disable options marked "(trained)", "(expert)", "(master)" or "(legendary)" record a minimum rank, shown as a badge on the tracker and editable in the plan. Under-ranked characters can't roll from the tracker, and under-ranked rolls from chat are not counted (a warning tells the GM). Toggle with the "Enforce proficiency requirements" setting (on by default).
+
 ## 0.1.1 (prerelease)
 
 - **"Any combination" disables:** a component can require N successes across all its disable options combined (e.g. three Occultism or Religion successes in any mix). Detected from the disable text and editable in the plan as "Successes in any combination". The tracker shows the shared total.

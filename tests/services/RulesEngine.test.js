@@ -411,3 +411,24 @@ describe('any-combination (shared) successes', () => {
     expect(syncStateToPlan(s, smaller).instances[0].progress).toEqual({ d1: 2, d2: 0 });
   });
 });
+
+test('a roll below the option minRank is ignored', () => {
+  const ranked = {
+    ...plan,
+    components: [
+      {
+        ...plan.components[0],
+        disables: [{ id: 'd1', skill: 'thievery', dc: 37, successesNeeded: 1, minRank: 3 }],
+      },
+    ],
+  };
+  const s = activate(createInitialState(ranked));
+  const low = applyResult(s, ranked, r({ disableId: 'd1', rank: 2 }));
+  expect(low.state).toBe(s);
+  expect(low.events[0]).toMatchObject({ type: 'ignored', reason: 'rank-too-low', minRank: 3 });
+  // Unknown rank (not enforced) counts.
+  expect(applyResult(s, ranked, r({ disableId: 'd1' })).state.instances[0].disabled).toBe(true);
+  // A critical failure from an under-ranked roller does not trigger either.
+  const crit = applyResult(s, ranked, r({ disableId: 'd1', rank: 1, degree: DEGREE.CRIT_FAIL }));
+  expect(crit.state.status).toBe('active');
+});

@@ -1,4 +1,4 @@
-import { PLAN_VERSION } from '../constants.js';
+import { PLAN_VERSION, RANKS } from '../constants.js';
 import { parseCounteracts, parseInlineChecks, stripHtml } from './inline.js';
 
 const WORD_NUM = {
@@ -54,6 +54,29 @@ const isConnectorOnly = (text) =>
     .replace(PROFICIENCY_RE, '')
     .replace(/[,;]|\b(?:or|and)\b/gi, '')
     .trim() === '';
+
+// "@Check[...] (master)": the rank written right after a check. Alternatives joined only by
+// connectors share the rank written after the last one ("@Check[a] or @Check[b] (expert)").
+// Also inside the check's own label ("{Thievery (master)}") or after an action cost
+// ("@Check[...] (2 actions) (trained)").
+const RANK_WORD = '(untrained|trained|expert|master|legendary)';
+const RANK_AFTER_RE = new RegExp(
+  `^\\s*(?:\\([^)]*\\bactions?\\)\\s*)?\\(\\s*${RANK_WORD}\\s*\\)`,
+  'i',
+);
+const RANK_IN_LABEL_RE = new RegExp(`\\{[^}]*\\(\\s*${RANK_WORD}\\s*\\)[^}]*\\}$`, 'i');
+function ranksFor(rawDisable, checks) {
+  const ranks = checks.map((c, i) => {
+    const tail = stripHtml(rawDisable.slice(c.end, checks[i + 1]?.index ?? rawDisable.length));
+    const m = RANK_IN_LABEL_RE.exec(rawDisable.slice(c.index, c.end)) ?? RANK_AFTER_RE.exec(tail);
+    return m ? RANKS.indexOf(m[1].toLowerCase()) : null;
+  });
+  for (let i = checks.length - 2; i >= 0; i--) {
+    if (ranks[i] == null && isConnectorOnly(rawDisable.slice(checks[i].end, checks[i + 1].index)))
+      ranks[i] = ranks[i + 1];
+  }
+  return ranks.map((r) => r || null);
+}
 
 // Alternatives joined only by connectors share the multiplier written after the last one.
 // A count written right after its own check is explicit; a shared one is inferred (a guess).
@@ -142,6 +165,7 @@ export function draftPlan(source) {
 
     const checks = parseInlineChecks(rawDisable);
     const successes = successesFor(rawDisable, checks);
+    const ranks = ranksFor(rawDisable, checks);
     checks.forEach((c, i) => {
       const successesNeeded = successes.counts[i];
       if (successes.inferred[i] && !warnings.includes('successes-heuristic')) {
@@ -151,9 +175,10 @@ export function draftPlan(source) {
         id: `d${i + 1}`,
         skill: c.skill,
         dc: c.dc,
-        label: c.label,
+        label: c.label.replace(PROFICIENCY_RE, '').trim() || c.skill,
         traits: c.traits,
         successesNeeded,
+        minRank: ranks[i],
       });
     });
     if (!checks.length) warnings.push('no-disables');
